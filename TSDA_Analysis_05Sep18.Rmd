@@ -10,7 +10,6 @@ output:
     toc_float: yes
 ---
 
-
 ```{r warning=FALSE, message=FALSE, echo = FALSE}
 library('tidyr')
 library('ggplot2')
@@ -215,11 +214,12 @@ SpeciesData <- data.frame(speciesName, Spnsite, Spnvisits, SpvisitPerSite,
 ```
 
 ```{r savefirdstdata, eval=FALSE}
-write.csv(SpeciesData, file = 'metrics/model_data.csv', row.names = FALSE)
+write.csv(SpeciesData,
+          file = 'Results/metrics/model_data.csv', row.names = FALSE)
 ```
 
 ```{r viewmodeldata}
-model_data <- read.csv('metrics/model_data.csv')
+model_data <- read.csv('Results/metrics/model_data.csv')
 str(model_data)
 head(model_data)
 ```
@@ -312,7 +312,7 @@ for(data_file in rdata_files){
   row.names(df) <- 1:nrow(df)
   write.csv(df,
             row.names = FALSE,
-            file = file.path('metrics',
+            file = file.path('Results/metrics',
                                  paste0('posteriorLM_',
                                         gsub('.rdata$', '',
                                              basename(data_file)),
@@ -323,7 +323,7 @@ for(data_file in rdata_files){
                sp_list = sp_list, suffix = '_last10yrs')
   df <- do.call(rbind, df)
   row.names(df) <- 1:nrow(df)
-  write.csv(df, file = file.path('metrics',
+  write.csv(df, file = file.path('Results/metrics',
                                  paste0('posteriorLM_last10yrs_',
                                         gsub('.rdata$', '',
                                              basename(data_file)),
@@ -334,7 +334,7 @@ for(data_file in rdata_files){
 Once we have the data for all species we can add the data together into one file
 
 ```{r combineposteriorfiles, eval = FALSE}
-LMfiles <- list.files(path = 'metrics',
+LMfiles <- list.files(path = 'Results/metrics',
                       pattern = '^posteriorLM',
                       full.names = TRUE)
 
@@ -350,7 +350,7 @@ for(i in LMfiles){
 
 }
 
-write.csv(master, file = 'metrics/ALL_posteriorLM.csv',
+write.csv(master, file = 'Results/metrics/ALL_posteriorLM.csv',
           row.names = FALSE)
 
 ```
@@ -554,7 +554,7 @@ for(data_file in data_files){
   
   raw_metrics <- do.call(rbind, raw_metrics)
   
-  write.csv(raw_metrics, file = file.path('metrics',
+  write.csv(raw_metrics, file = file.path('Results/metrics',
                                           paste0('rawMetrics_',
                                                  gsub('.rdata$', '',
                                                       basename(data_file)),
@@ -572,7 +572,7 @@ for(data_file in data_files){
   
   raw_metrics <- do.call(rbind, raw_metrics)
   
-  write.csv(raw_metrics, file = file.path('metrics',
+  write.csv(raw_metrics, file = file.path('Results/metrics',
                                           paste0('rawMetrics_last10yrs',
                                                  gsub('.rdata$', '',
                                                       basename(data_file)),
@@ -584,7 +584,7 @@ for(data_file in data_files){
 Once we have the data for all species we can add the data together into one file
 
 ```{r combinerawdatafiles, eval = FALSE}
-rawdataFiles <- list.files(path = 'metrics',
+rawdataFiles <- list.files(path = 'Results/metrics',
                       pattern = '^rawMetrics',
                       full.names = TRUE)
 
@@ -597,7 +597,7 @@ for(i in rawdataFiles){
 
 }
 
-write.csv(master, file = 'metrics/ALL_rawMetrics.csv',
+write.csv(master, file = 'Results/metrics/ALL_rawMetrics.csv',
           row.names = FALSE)
 ```
 
@@ -608,9 +608,9 @@ We can do some simple decision tree statistics to develop rules of thumb once we
 First, combine all the data
 
 ```{r combineData}
-RM <- read.csv('metrics/ALL_rawMetrics.csv')
-LM <- read.csv('metrics/ALL_posteriorLM.csv')
-MM <- read.csv('metrics/model_data.csv')
+RM <- read.csv('Results/metrics/ALL_rawMetrics.csv')
+LM <- read.csv('Results/metrics/ALL_posteriorLM.csv')
+MM <- read.csv('Results/metrics/model_data.csv')
 
 # Remove repeat variables from model data
 MM <- MM[,c('speciesName','FirstYrConverged',
@@ -640,7 +640,7 @@ ggplot(trendsData, aes(x = mean_year_precision)) + geom_histogram(bins=20) +
   scale_x_log10(labels=scales::comma) + theme_light()
 
 # Lets look at the results of the consultation with model experts
-fsdf <- read.csv(file = 'fsdf_full.csv')
+fsdf <- read.csv(file = 'Results/Consultation/fsdf_full.csv')
 
 # Plot the results of the consultation.  This graph shows the score given to each model
 # where the score is the number of experts who thought the model was of good quality
@@ -802,10 +802,10 @@ To show the effect of this step, below is a plot showing the proportion of the r
 
 ```{r prop_removed}
 # Read in the metrics
-RM <- read.csv('./metrics/ALL_rawMetrics.csv')
+RM <- read.csv('Results/metrics/ALL_rawMetrics.csv')
 RM <- RM[RM$Taxa==as.character(RM$Taxa_Root),]
 # Read in the metrics calculated for all excluded records
-RM_1rec <- read.csv('./metrics/ALL_1rec.csv')
+RM_1rec <- read.csv('Results/metrics/ALL_1rec.csv')
 colnames(RM_1rec)[2] <- 'numrec_removed'
 RM <- merge(RM,RM_1rec)
 RM$Taxa <- as.character(RM$Taxa)
@@ -1093,7 +1093,7 @@ To provide a benchmark, below are two plots for all taxa for all UK data.  The f
 ```{r plotnumtaxa}
 
 # Extract raw data metrics, as we want to look at all species, not just those that we had matching posterior data for
-RM <- read.csv('metrics/ALL_rawMetrics.csv') 
+RM <- read.csv('Results/metrics/ALL_rawMetrics.csv') 
 # Remove all last 10 yr data
 RM$Taxa <- as.character(RM$Taxa)
 RM <- RM[RM$Taxa==as.character(RM$Taxa_Root),]
@@ -1204,9 +1204,9 @@ The raw metrics for each habitat have been calculated from the raw data.  Using 
 ```{r habmetrics}
 # Read in the habitat raw metrics
 RM_hab <-
-  read.csv(file = file.path('../Habitat/HabMetrics/ALL_habMetrics.csv'))
+  read.csv(file = file.path('Habitat/HabMetrics/ALL_habMetrics.csv'))
 # Display the list of possible habitats
-hab_list <- read.csv('../Habitat/Habitat_List.csv')
+hab_list <- read.csv('Habitat/Habitat_List.csv')
 column_spec(kable(hab_list, format = 'latex',
                   caption = 'List of available habitats'),
             2, width = "8cm")
@@ -1229,12 +1229,9 @@ The data can also be split by region.  For this we read in the region data file 
 ```{r regionmetrics}
 # Read in the regional raw metrics
 RM_reg <-
-  read.csv(file =  file.path('../Region/RegMetrics/ALL_regMetrics.csv'))
+  read.csv(file =  file.path('Region/RegMetrics/ALL_regMetrics.csv'))
 # Display the list of regions
-NUTS <- read.csv(file = file.path('../Region/NUT_10km_level.csv'))
-region_lookup <- data.frame(unique(NUTS[,c('nutscode','nutsname')]))
-region_lookup <- data.frame(region = region_lookup$nutsname,
-                      code = region_lookup$nutscode)
+region_lookup <- read.csv(file = file.path('Region/NUTS_lookup.csv'))
 kable(region_lookup, caption = 'List of regions')
 
 # Merge this lookup table with the raw data to allow it be queried by code
