@@ -2,7 +2,7 @@
 
 An assessment of the data requirements in order to run an occupancy model and produce useful results.  Also included is a function to estimate whether or not a new dataset or a regional/habitat sub-division of the data will produce a useful model.
 
-A good starting point is the rmarkdown results: ```TSDA_Analysis_05Sep18.pdf```.  This explains the project and how it all runs.
+A good starting point is the rmarkdown results: ```TSDA_Analysis.pdf```.  This explains the project and how it all runs.
 
 ## Viewing all data and querying by region or habitat
 
