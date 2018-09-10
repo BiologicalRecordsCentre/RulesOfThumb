@@ -26,12 +26,12 @@ source('./Results/plotting_function.R')
 ###             are 20 records for the species and 1000 records for the     ###
 ###             taxonomic group, prop_abs = 980/1000 = .98                  ###
 ###                                                                         ###
-###   NOTE: all sites with the record in the dataset must meet be revisited ###
-###         in at least one subsequent year and a species within the same   ###
-###         taxonomic group be recorded.  Every record which does not meet  ###
-###         this requirement should be removed before calculating these     ###
-###         metrics.  For more on this, see 'Input Data Caveat' section of  ###
-###         TSDA_Analysis.pdf                                               ###
+###   NOTE: all sites with a record in the dataset must be revisited in at  ###
+###     least one subsequent year, and a species within the same taxonomic  ###
+###     group then recorded.  Every record which does not meet this         ###
+###     requirement should be removed before calculating these metrics.     ###
+###     For more on this, see 'Input Data Caveat' section of                ###
+###     TSDA_Analysis.pdf                                                   ###
 ###                                                                         ###
 ###############################################################################
 RM <- read.csv('Results/metrics/ALL_rawMetrics.csv') 
