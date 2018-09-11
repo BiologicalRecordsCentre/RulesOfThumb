@@ -16,11 +16,20 @@ calc_bad <- function(df){
 #  reg = region of interest, either full name or NUTS code
 #  zeroes = are species with no records (Spnvisits==0) to be included?
 #  aspire = is the cutoff the aspirational target (10:1 good:bad)?
-num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,
+#  melt = is the long table for plotting required?
+num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
                      zeroes=TRUE,aspire=FALSE){
+  taxa_num <- NULL
   if(!zeroes){
     df <- df[df$Spnvisits!=0,]
   }
+  for(taxa in sort(unique(df$Taxa))){
+    numrec <- length(unique(df$species[df$Taxa==taxa]))
+    taxa_num <- rbind(taxa_num,
+                      data.frame(taxa = taxa,
+                                 numrec = numrec))
+  }
+  
   if(!is.null(hab)){
     df <- df[as.character(df$habitat)==hab,]
   }
@@ -31,22 +40,25 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,
       df <- df[as.character(df$region)==reg,]
     }
   }
-  taxa_count <- data.frame(matrix(ncol = 5, nrow = 0))
-  for(taxa in sort(unique(df$Taxa))){
-    numrec <- length(df$Taxa[df$Taxa==taxa])
-    num0 <- length(df$Taxa[df$Taxa==taxa&df$Spnvisits==0])
+  taxa_count <- NULL
+  for(taxa in sort(unique(taxa_num$taxa))){
     if(aspire){
       data_good <- length(df$Taxa[df$Taxa==taxa&df$data_aspire=='good'])
+      data_bad  <- length(df$Taxa[df$Taxa==taxa&df$data_aspire=='bad'])
     } else {
       data_good <- length(df$Taxa[df$Taxa==taxa&df$data_good=='good'])
+      data_bad  <- length(df$Taxa[df$Taxa==taxa&df$data_good=='bad'])
     }
+    no_data <- length(df$Taxa[df$Taxa==taxa&df$Spnvisits==0])
     tmpdf <- data.frame(taxa = taxa,
-                        numrec = numrec,
-                        no_data = num0,
-                        bad = numrec - data_good - num0,
+                        no_data = no_data,
+                        bad = data_bad - no_data,
                         good = data_good)
     taxa_count <- rbind(taxa_count,tmpdf)
   }
+  
+  taxa_count <- merge(taxa_count,taxa_num)
+  taxa_count$no_data <- taxa_count$numrec - taxa_count$bad - taxa_count$good
   
   # Convert data table for turning into graphs
   taxa_melt <- melt(taxa_count, id=c('numrec','taxa'))
@@ -54,11 +66,18 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,
   taxa_prop$bad <- taxa_prop$bad/taxa_prop$numrec
   taxa_prop$good <- taxa_prop$good/taxa_prop$numrec
   taxa_prop$no_data <- taxa_prop$no_data/taxa_prop$numrec
+  taxa_prop$no_data[taxa_prop$numrec==0] <- 1
+  taxa_prop$bad[taxa_prop$numrec==0] <- 0
+  taxa_prop$good[taxa_prop$numrec==0] <- 0
   taxa_prop_melt <- melt(taxa_prop, id=c('numrec','taxa'))
   if(prop){
     taxa_melt <- taxa_prop_melt
   }
-  taxa_melt
+  if(melt){
+    return(taxa_melt)
+  } else {
+    return(taxa_count)
+  }
 }
 # Function to plot data extracted from data frame from num_spec function
 #  df = a data frame from num_spec
