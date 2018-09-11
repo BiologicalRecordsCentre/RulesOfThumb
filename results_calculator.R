@@ -4,7 +4,7 @@
 ###    occupancy model                                                      ###
 ###                                                                         ###
 ###############################################################################
-library('reshape')
+library('reshape2')
 library('ggplot2')
 library('tidyr')
 source('./Results/plotting_function.R')
@@ -66,6 +66,15 @@ hab_list <- read.csv('Habitat/Habitat_List.csv')
 RM_hab <- calc_bad(RM_hab)
 RM_hab$habitat <- as.character(RM_hab$habitat)
 
+# Produce a table for all habitats in the UK
+hab_df <- NULL
+for(hab in hab_list$Habitat_code){
+  hab_spec <- num_spec(df=RM_hab,hab=hab,melt=FALSE)
+  hab_spec$numrec <- hab
+  names(hab_spec)[2] <- 'habitat'
+  hab_df <- rbind(hab_df,hab_spec)
+}
+
 # Plot up a sample graph for broad leaf woodland
 num_spec(RM_hab,hab='BLW') %>% stack_taxa(prefix='Broad-leaf Woodland')
 num_spec(RM_hab,hab='BLW',prop=TRUE) %>%
@@ -90,6 +99,15 @@ region_lookup <- read.csv(file = file.path('Region/NUTS_lookup.csv'))
 RM_reg <- merge(RM_reg,region_lookup)
 RM_reg <- calc_bad(RM_reg)
 
+# Produce a table for all habitats in the UK
+reg_df <- NULL
+for(reg in region_lookup$code){
+  reg_spec <- num_spec(df=RM_reg,reg=reg,melt=FALSE)
+  reg_spec$numrec <- reg
+  names(reg_spec)[2] <- 'region'
+  reg_df <- rbind(reg_df,reg_spec)
+}
+
 # Plot graphs (possible regions are in region_lookup)
 # Plot up a sample graph for Scotland
 num_spec(RM_reg,reg='Scotland') %>% stack_taxa(prefix='Scotland')
@@ -97,4 +115,5 @@ num_spec(RM_reg,reg='Scotland',prop=TRUE) %>% stack_taxa(prefix='Scotland')
 # And for Wales
 num_spec(RM_reg,reg='UKL') %>% stack_taxa(prefix='Wales')
 num_spec(RM_reg,reg='UKL',prop=TRUE) %>% stack_taxa(prefix='Wales')
+num_spec(RM_reg,reg='UKN',prop=TRUE) %>% stack_taxa(prefix='N. Ireland')
 num_spec(RM_reg,reg='UKI',prop=TRUE,aspire=TRUE) %>% stack_taxa(prefix='London')
