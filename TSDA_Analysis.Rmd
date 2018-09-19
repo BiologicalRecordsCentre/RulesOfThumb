@@ -824,19 +824,21 @@ for(taxa in sort(unique(RM$Taxa))){
 taxa_melt <- melt(df, id=c('taxa'))
 
 # Plot the results
-stack_records <- function(df){
-  ylabel <- 'Proportion of records'
-  title <- paste(ylabel,'which are included')
+stack_records <- function(df,colours,ylabel,title){
   ggplot(data=df,
          aes(fill=variable,y=value,x=taxa)) +
     geom_bar(stat='identity',alpha = .5) +
     theme(axis.text.x = element_text(angle=90, hjust=1, vjust = 0.3)) +
     labs(fill = 'Data',x='Taxonomic Group',y=ylabel) +
-    scale_fill_manual(values = c('red', '#9999FF')) +
-    ggtitle(title)
+    scale_fill_manual(values = colours) +
+    ggtitle(title) +
+    scale_x_discrete(limits = rev(levels(df$taxa))) +
+    coord_flip()
 }
 
-stack_records(taxa_melt)
+stack_records(taxa_melt, colours = c('red', '#9999FF'),
+              ylabel = 'Proportion of records',
+              title = 'Proportion of records which are included')
 ```
 
 ### Classification
@@ -1027,21 +1029,22 @@ td_taxa <- rbind(td_taxa,tmp_bind)
 names <- sort(unique(as.character(td_taxa$Taxa_Root)))
 names_long <- c()
 for(i in 1:length(names)){
-  names_long[i*3-2] <- names[i]
-  names_long[i*3-1] <- ''
+  names_long[i*3-2] <- ''
+  names_long[i*3-1] <- names[i]
   names_long[i*3] <- ''
 }
 
 ## Data wrangling complete, plot it up
 ggplot(td_taxa, aes(Taxa, P90), main = 'Title') +
-  geom_jitter(aes(cat, P90), data = td_taxa,
+  geom_jitter(aes(reorder(cat,desc(cat)), P90), data = td_taxa,
               colour = td_taxa$colour, alpha = td_taxa$alpha,
               position = position_jitter(width = 0.08)) +
   scale_y_log10() +
   geom_hline(yintercept=8.65) +
   theme(axis.text.x = element_text(angle=90, hjust=1, vjust = 1.25),
-        axis.ticks.x = element_blank()) +
-  scale_x_discrete(labels=names_long)
+        axis.ticks.x = element_blank(), axis.ticks.y = element_blank()) +
+  scale_x_discrete(labels=rev(names_long)) +
+  coord_flip()
 ```
 
 #### 1:10 Good:bad tree - bare minimum to try running a model
@@ -1123,13 +1126,14 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
   taxa_num <- NULL
   if(!zeroes){
     df <- df[df$Spnvisits!=0,]
-  }  
+  }
   for(taxa in sort(unique(df$Taxa))){
-    numrec <- length(unique(df$species[df$Taxa==taxa]))
+    num_spec <- length(unique(df$species[df$Taxa==taxa]))
     taxa_num <- rbind(taxa_num,
                       data.frame(taxa = taxa,
-                                 numrec = numrec))
+                                 num_spec = num_spec))
   }
+
   if(!is.null(hab)){
     df <- df[as.character(df$habitat)==hab,]
   }
@@ -1158,18 +1162,18 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
   }
  
   taxa_count <- merge(taxa_count,taxa_num)
-  taxa_count$no_data <- taxa_count$numrec - taxa_count$bad - taxa_count$good
-  
+  taxa_count$no_data <- taxa_count$num_spec - taxa_count$bad - taxa_count$good
+
   # Convert data table for turning into graphs
-  taxa_melt <- melt(taxa_count, id=c('numrec','taxa'))
+  taxa_melt <- melt(taxa_count, id=c('num_spec','taxa'))
   taxa_prop <- taxa_count
-  taxa_prop$bad <- taxa_prop$bad/taxa_prop$numrec
-  taxa_prop$good <- taxa_prop$good/taxa_prop$numrec
-  taxa_prop$no_data <- taxa_prop$no_data/taxa_prop$numrec
-  taxa_prop$no_data[taxa_prop$numrec==0] <- 1
-  taxa_prop$bad[taxa_prop$numrec==0] <- 0
-  taxa_prop$good[taxa_prop$numrec==0] <- 0
-  taxa_prop_melt <- melt(taxa_prop, id=c('numrec','taxa'))
+  taxa_prop$bad <- taxa_prop$bad/taxa_prop$num_spec
+  taxa_prop$good <- taxa_prop$good/taxa_prop$num_spec
+  taxa_prop$no_data <- taxa_prop$no_data/taxa_prop$num_spec
+  taxa_prop$no_data[taxa_prop$num_spec==0] <- 1
+  taxa_prop$bad[taxa_prop$num_spec==0] <- 0
+  taxa_prop$good[taxa_prop$num_spec==0] <- 0
+  taxa_prop_melt <- melt(taxa_prop, id=c('num_spec','taxa'))
   if(prop){
     taxa_melt <- taxa_prop_melt
   }
@@ -1199,13 +1203,7 @@ stack_taxa <- function(df,prefix=NULL){
   } else {
     title <- paste(ylabel,'which can be modelled')
   }
-  ggplot(data=df,
-         aes(fill=variable,y=value,x=taxa)) +
-    geom_bar(stat='identity',alpha = .5) +
-    theme(axis.text.x = element_text(angle=90, hjust=1, vjust = 0.3)) +
-    labs(fill = 'Data',x='Taxonomic Group',y=ylabel) +
-    scale_fill_manual(values = colours) +
-    ggtitle(title)
+  stack_records(df,colours,ylabel,title)
 }
 
 # Plot the graphs
@@ -1236,7 +1234,7 @@ RM_hab$habitat <- as.character(RM_hab$habitat)
 
 # Plot up a sample graph for broad leaf woodland
 num_spec(RM_hab,hab='BLW',prop=TRUE) %>%
-  stack_taxa(prefix='Broad-leaf Woodland')
+  stack_taxa(prefix='B-L Woodland')
 # And for coastal
 num_spec(RM_hab,hab='C',prop=TRUE) %>% stack_taxa(prefix='Coastal')
 ```
