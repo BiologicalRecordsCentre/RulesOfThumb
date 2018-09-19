@@ -88,7 +88,7 @@ stack_taxa <- function(df,prefix=NULL){
   } else {
     colours = c('red', '#9999FF')
   }
-  if(max(df$value<=1)){
+  if(max(df$value)<=1){
     ylabel <- 'Proportion of Species'
   } else {
     ylabel <- 'Number of Species'
