@@ -1,14 +1,20 @@
 ---
-title: "TSDA_Analysis_RulesofThumb"
-author: "Tom August & Mark Logie"
+title: "Rules of Thumb for Species Occupancy Models"
+author: "Mark Logie & Tom August"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output:
   pdf_document:
     toc: yes
+    toc_depth: 4
   html_document:
     toc: yes
     toc_float: yes
+    toc_depth: 4
 ---
+
+```{r headers, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+```
 
 ```{r warning=FALSE, message=FALSE, echo = FALSE}
 library('tidyr')
@@ -22,15 +28,17 @@ library('rpart')
 library('RcppEigen')
 library('psych')
 library('kableExtra')
+library('BRCmap')
 
-knitr::opts_chunk$set(echo = TRUE, cache = FALSE)
+
 ```
 
 Built with `r getRversion()`
 
 ## Introduction
 
-The aim of this document is to start development for rules of thumb around occupancy models. Which species can we make reliable models for? How many records do we need? How large an area? how many visits? Having a greater understnding of how these variables effect the quality of the models produced will allow us to develop rules of thumb for which species can be modelled and at which scale. This will also help us to identify key data gaps.
+The aim of this document is to start development for rules of thumb around occupancy models. Which species can we make reliable models for? How many records do we need? How large an area? how many visits? Having a greater understanding of how these variables effect the quality of the models produced will allow us to develop rules of thumb for which species can be modelled and at which scale. This will also help us to identify key data gaps.
+\pagebreak
 
 ## Metrics
 
@@ -38,25 +46,25 @@ To develop these rules of thumb we need two sets of metrics.
 
 ### Data quality metrics
 
-The metrics describe the data that we have for a species and can be used to predict the quality of the model. We propose this includes:
+The metrics describe the data that we have for a species and can be used to predict the quality of the model:
 
-* The 50th/90th percentile of the number of records of the focal species per year [median/P90]
-* The 50th/70th/80th/90th percentile of the number of visits to a site each year, for sites where the species has been observed in that year (i.e. including visits where the focal species was not recorded) [visits_median/P70/P80/P90]
-* The proportion of years in which the focal species has been recorded [prop_of_years]
-* The proportion of all site:year combinations, where the focal species is observed, that have > 1 visit [prop_repeats_grp]
-* Considering all the lists where the focal species was recorded, the proportion of lists that had length 1 (i.e. records only of the focal species) [prop_list_one]
-* Considering all visits for the ‘taxonomic’ group in the dataset, the proportion of all visits that did not record the focal species [prop_abs]
-* Considering the visits for the ‘taxonomic’ group where the focal species was not observed, this is the proportion of visits with list length > 1 [prop_abs_list]*
+* The 50th/90th percentile of the number of records of the focal species per year [`median/P90`]
+* The 50th/70th/80th/90th percentile of the number of visits to a site each year, for sites where the species has been observed in that year (i.e. including visits where the focal species was not recorded) [`visits_median/P70/P80/P90`]
+* The proportion of years in which the focal species has been recorded [`prop_of_years`]
+* The proportion of all site:year combinations, where the focal species is observed, that have > 1 visit [`prop_repeats_grp`]
+* Considering all the lists where the focal species was recorded, the proportion of lists that had length 1 (i.e. records only of the focal species) [`prop_list_one`]
+* Considering all visits for the ‘taxonomic’ group in the dataset, the proportion of all visits that did not record the focal species [`prop_abs`]
+* Considering the visits for the ‘taxonomic’ group where the focal species was not observed, this is the proportion of visits with list length > 1 [`prop_abs_list`]*
 
-*Note: this variable is excluded in the final decision trees.  See 'Examining the Classification Variables'
+*Note: this variable is excluded in the final decision trees.  See 'Classifying the data: Examining the classification variables'
 
 ### Model quality metrics
 
-These metrics measure the quality of the model produce and are what we will us to develop the rules of thumb. Currently we have two suggestions:
+These metrics measure the quality of the model produced and are what we will use to develop the rules of thumb:
 
-* The precision of the trend where `Precision <- 1/(sd(long_term_gr)^2)` and long_term_gr is a vector of annual growth rates where the `length()` of long_term_gr is equal to the number of model iterations [precision_growth_rate]
-* Average precision of the year estimates where precision is defined in the same way as above [mean_year_precision]
-* Proportion of years with converged Rhat [PropYrConverged]
+* The precision of the trend where `Precision <- 1/(sd(long_term_gr)^2)` and `long_term_gr` is a vector of annual growth rates where the `length()` of long_term_gr is equal to the number of model iterations [`precision_growth_rate`]
+* Average precision of the year estimates where precision is defined in the same way as above [`mean_year_precision`]
+* Proportion of years with converged Rhat [`PropYrConverged`]
 
 ## Data
 
@@ -106,7 +114,7 @@ plot_species <- function(new_data, x, species, main = ''){
   new_data$rhat_threshold[new_data$Rhat < 1.1] <- 'Good (<1.1)'
   new_data$rhat_threshold[new_data$Rhat > 1.1] <- 'Bad (>1.1)'
   
-  ### plot the yearly predicted proportion of occupied sites ###
+  # plot the yearly predicted proportion of occupied sites
   # plot with error bars based on 95CI
   ggplot(new_data, aes_string(x = "year", y = "mean")) + 
     theme_bw() +
@@ -226,7 +234,7 @@ head(model_data)
 
 ### Posteriors
 
-We can also get data on the trend estimate from the 1000 posteriors that Charlie has already calculated. This is for all species groups regardless of weather they were run on Cirrus or JASMIN. We have to remove some years full of NAs. This is where the model is run to a year where there is no data. As a consequence some of hte 'final 10 year' runs will actually be for a shorter period.
+We can also get data on the trend estimate from the 1000 posteriors that Charlie has already calculated. This is for all species groups regardless of whether they were run on Cirrus or JASMIN. We have to remove some years full of NAs. This is where the model is run to a year where there is no data. As a consequence some of the 'final 10 years' runs will actually be for a shorter period.
 
 ```{r trendfrom1000posterior, eval = FALSE}
 path_to_posteriors <-
@@ -357,54 +365,31 @@ write.csv(master, file = 'Results/metrics/ALL_posteriorLM.csv',
 
 ### Raw data files
 
-There are some additional stats we can get from the raw data file. Again, these are for all groups not just CIRRUS/JASMIN runs. Given the memory requirements needed to reformat the plant and moth data I have removed them from this. We can work with them seperatly by using the visit data files which I assume are on JASMIN where they will have been created.
+There are some additional stats we can get from the raw data file. Again, these are for all groups not just CIRRUS/JASMIN runs. Given the memory requirements needed to reformat the plant and moth data I have removed them from this. We can work with them seperately by using the visit data files which are on JASMIN where they will have been created.
 
 ```{r rawcirrusdatafiles, eval = FALSE}
-rawDataMetrics <- function(sp, tFDall, basen, suffix = NULL, years = NULL){
+dataMetrics <- function(sp, basen, species_obs, hab=NULL, 
+                        habitat=FALSE, region=FALSE, suffix=NULL, years = FALSE){
   
   cat(as.character(sp),'... ')
   
   timetaken <- system.time({
-    tFDall <- tFDall[,c('visit','site','L','year',as.character(sp))]
-    tFD <- tFDall[tFDall[, as.character(sp)],]
+    if(habitat){
+      tFDall <- species_obs[(species_obs[,paste0(hab,'_hab')]),]
+    } else if(region){
+      tFDall <- species_obs[species_obs$nutsname==hab,]
+    } else {
+      tFDall <- species_obs
+    }
+    tFD <- tFDall[tFDall[,names(tFDall) == sp],]
     
-    df <- data.frame(species = paste0(sp, suffix),
-                     avVisitPerYear = 0,
-                     Spnvisits = 0,
-                     Spnsite = 0,
-                     SpvisitPerSite = 0,
-                     SpvisitPerYear = 0,
-                     Totalnvisits = 0,
-                     Totalnsites = 0,
-                     TotalvisitPerYear = 0,
-                     median = 0,
-                     P70 = 0,
-                     P80 = 0,
-                     P90 = 0,
-                     sdVisitsPerYear = 0,
-                     coeffVar = 0,
-                     prop_repeats_spc = 0,
-                     prop_repeats_grp = 0,
-                     visits_median = 0,
-                     visits_P70 = 0,
-                     visits_P80 = 0,
-                     visits_P90 = 0,
-                     prop_of_years = 0,
-                     prop_abs_list = 0,
-                     prop_abs = 1,
-                     prop_list_one = 0,
-                     Taxa = NA,
-                     Taxa_Root = NA,
-                     stringsAsFactors = FALSE)
-    
-    # Extract taxonomic name from basename
-    tax_nom <- substr(basen,start = 12,stop = (regexpr('_17',basen)[1]-1))
-    df[,'Taxa_Root'] <- tax_nom
+    # Extract taxonomic name
+    tax_root <- substr(basen,start = 1,stop = (regexpr('_17',basen)[1]-1))
     
     if(!is.null(years)){
       # There is a limit to the number of year's data we want
       # Set taxonomic name with this information included
-      df[,'Taxa'] <- paste0('last',years,'yrs',tax_nom)
+      tax_nom <- paste0('last',years,'yrs',tax_root)
       #  Drop everything we don't want
       if(nrow(tFD)!=0){
         boundingyear <- max(tFD$year)-years
@@ -418,47 +403,78 @@ rawDataMetrics <- function(sp, tFDall, basen, suffix = NULL, years = NULL){
       }
       tFDall <- tFDall[tFDall$year>boundingyear,]
     } else {
-      # We want all the data, so set taxa equal to base taxonomic name
-      df[,'Taxa'] <- tax_nom
+      tax_nom <- tax_root
     }
-    if(nrow(tFD)!=0){
-      # Number of records of species
-      df[, 'Spnvisits'] <- nrow(tFD)
-      # Number of sites for species
-      df[, 'Spnsite'] <- length(unique(tFD$site))
-      df[, 'SpvisitPerSite'] <- df$Spnvisits/df$Spnsite
-      df[, 'SpvisitPerSite'][is.na(df[, 'SpvisitPerSite'])] <- 0
-      total_years <- length(min(tFD$year):max(tFD$year))
-      df[, 'SpvisitPerYear'] <- df$Spnvisits/total_years
-      df[, 'SpvisitPerYear'][is.na(df[, 'SpvisitPerYear'])] <- 0
-
-      # proportion of years with data
-      df[, 'prop_of_years'] <- length(unique(tFD$year))/total_years
+    
+    if(nrow(tFD)==0){
+    # No data, so set a few variables to 0.  The reason for using 0's as defaults is if
+    # there is no data, these parameters should be 0 e.g. median number of visits = 0.
+    # Without this default, many parameters return NA, which is less accurate.
+      nyears <- Spnsite <- Spnvisits <- SpvisitPerSite <- SpvisitPerYear <-
+        avVisitPerYear <- median <- P70 <- P80 <- P90 <- sdVisitsPerYear <-
+        coeffVar <- zmedian <- zP70 <- zP80 <- zP90 <- zsdVisitsPerYear <-
+        zcoeffVar <- visits_median <- visits_P70 <- visits_P80 <- visits_P90 <-
+        prop_repeats_spc <- prop_repeats_grp <- prop_of_years <- prop_list_one <-
+        prop_abs_list <- Totalnvisits <- Totalnsites <- TotalvisitPerYear <- 0
+      prop_abs <- 1
+    } else {
+      # range of years with data
+      nyears <- (1+max(tFD$year)-min(tFD$year))
+      # Number of sites species is observed at
+      Spnsite <- length(unique(tFD$site))
+      # Number of visits on which the species is observed
+      Spnvisits <- length(unique(tFD$visit))
+      # Number of visits per site
+      SpvisitPerSite <- Spnvisits/Spnsite
+      # Number of visits per year
+      SpvisitPerYear <- Spnvisits/nyears
+      
       # average visits per year
-      visits_year <-
-        tapply(tFD$visit, tFD$year, FUN = function(x) length(unique(x)))
-      df[, 'avVisitPerYear'] <- mean(visits_year)
+      visits_year <- tapply(tFD$visit, tFD$year,
+                            FUN = function(x) length(unique(x)))
+      avVisitPerYear = mean(visits_year)
+    
+      # find 70, 80 and 90th percentiles
+      percentiles <- quantile(visits_year,c(.5,.7,.8,.9))
+      median <- as.numeric(percentiles[1])
+      P70 <- as.numeric(percentiles[2])
+      P80 <- as.numeric(percentiles[3])
+      P90 <- as.numeric(percentiles[4])
+  
+      if(nrow(tFD)==1){
+        sdVisitsPerYear <- coeffVar <- 1
+      } else {
+        # sd visits per year
+        sdVisitsPerYear = sd(visits_year)
+        # coefficient of variation
+        coeffVar <- sd(visits_year)/mean(visits_year)
+      }
+      
+      unique_years <- unique(tFD$year)
+      all_years    <- min(tFDall$year):max(tFDall$year)
+      missing_years <-  all_years[!(all_years %in% unique_years)]
+      visits_year <- c(visits_year,rep(0,length(missing_years)))
       
       # find 70, 80 and 90th percentiles
       percentiles <- quantile(visits_year,c(.5,.7,.8,.9))
-      df[, 'median'] <- as.numeric(percentiles[1])
-      df[, 'P70'] <- as.numeric(percentiles[2])
-      df[, 'P80'] <- as.numeric(percentiles[3])
-      df[, 'P90'] <- as.numeric(percentiles[4])
+      zmedian <- as.numeric(percentiles[1])
+      zP70 <- as.numeric(percentiles[2])
+      zP80 <- as.numeric(percentiles[3])
+      zP90 <- as.numeric(percentiles[4])
       
       # sd visits per year
-      df[, 'sdVisitsPerYear'] <- sd(visits_year)
-      
-      # coefficient of variation for the visits
-      df[, 'coeffVar'] <- sd(visits_year)/mean(visits_year)
-      
+      zsdVisitsPerYear = sd(visits_year)
+      # coefficient of variation
+      zcoeffVar <- sd(visits_year)/mean(visits_year)
+  
       # repeat visits
       # Within each year get the counts of visits to each location
       repeats <- count(tFD, site, year)
       repeats$concat <- paste0(repeats$site,'-',repeats$year)
       
       # What proportion of these are > 1
-      df[, 'prop_repeats_spc'] <- sum(repeats$n > 1) / nrow(repeats)
+      prop_repeats_spc <- sum(repeats$n > 1) / nrow(repeats)
+    
       # visits within the group for visits to each location within a year
       group_repeats <- count(tFDall, site, year)
       group_repeats$concat <-
@@ -468,39 +484,85 @@ rawDataMetrics <- function(sp, tFDall, basen, suffix = NULL, years = NULL){
       # species of interest was observed
       site_year <- group_repeats$concat %in% repeats$concat
       group_repeats <- group_repeats$n[site_year]
-      
-      # What proportion of site year combinations are repeated for the species
-      # of interest within the whole group
-      df[, 'prop_repeats_grp'] <-
-        sum(group_repeats > 1) / length(group_repeats)
+      prop_repeats_grp <- sum(group_repeats > 1) / length(group_repeats)
       
       # all visits to a site in a year where there was at least one observance
       # of species of interest
       percentiles <- quantile(group_repeats,c(.5,.7,.8,.9))
-      df[, 'visits_median'] <- as.numeric(percentiles[1])
-      df[, 'visits_P70'] <- as.numeric(percentiles[2])
-      df[, 'visits_P80'] <- as.numeric(percentiles[3])
-      df[, 'visits_P90'] <- as.numeric(percentiles[4])
+      visits_median <- as.numeric(percentiles[1])
+      visits_P70 <- as.numeric(percentiles[2])
+      visits_P80 <- as.numeric(percentiles[3])
+      visits_P90 <- as.numeric(percentiles[4])
+  
+      # proportion of years with data
+      prop_of_years <-
+        length(unique(tFD$year))/(1+max(tFDall$year)-min(tFDall$year))
+  
       # lists of length 1
-      df[, 'prop_list_one'] <- sum(tFD$L == 1) / nrow(tFD)
+      prop_list_one <- sum(tFD$L == 1) / nrow(tFD)
     }
-    
+
     # proportion of records for the group which did not observe this species
-    df[, 'prop_abs'] <- (nrow(tFDall)-nrow(tFD))/(nrow(tFDall))
+    prop_abs <- (nrow(tFDall)-nrow(tFD))/(nrow(tFDall))
     
     # proportion of non-observances with list length > 1
     tFDabs <- tFDall[!tFDall[,colnames(tFDall) %in% sp],]
-    df[, 'prop_abs_list'] <- sum(tFDabs$L > 1) / nrow(tFDabs)
+    prop_abs_list <- sum(tFDabs$L > 1) / nrow(tFDabs)
     
     # Number of sites for taxonomic group
-    df[, 'Totalnsites'] <- length(unique(tFDall$site))
+    Totalnsites <- length(unique(tFDall$site))
     # Number of visits for taxonomic group
-    df[, 'Totalnvisits'] <- nrow(tFDall)
-    
-    total_years <- length(min(tFDall$year):max(tFDall$year))
-    df[, 'TotalvisitPerYear'] <- df$Totalnvisits/total_years
-    df[, 'TotalvisitPerYear'][is.na(df[, 'TotalvisitPerYear'])] <- 0
-    
+    Totalnvisits <- nrow(tFDall)
+    if(nrow(tFDall)==0){
+      total_years <- 0
+      TotalvisitPerYear <- 0
+    } else {
+      total_years <- length(min(tFDall$year):max(tFDall$year))
+      TotalvisitPerYear <- Totalnvisits/total_years
+    }
+
+    df <- data.frame(species = paste0(sp, suffix),
+                     habitat = NA,
+                     region = NA,
+                     avVisitPerYear = avVisitPerYear,
+                     median = median,
+                     P70 = P70,
+                     P80 = P80,
+                     P90 = P90,
+                     sdVisitsPerYear = sdVisitsPerYear,
+                     coeffVar = coeffVar,
+                     zmedian = zmedian,
+                     zP70 = zP70,
+                     zP80 = zP80,
+                     zP90 = zP90,
+                     zsdVisitsPerYear = zsdVisitsPerYear,
+                     zcoeffVar = zcoeffVar,
+                     prop_repeats_spc = prop_repeats_spc,
+                     prop_repeats_grp = prop_repeats_grp,
+                     visits_median = visits_median,
+                     visits_P70 = visits_P70,
+                     visits_P80 = visits_P80,
+                     visits_P90 = visits_P90,
+                     prop_of_years = prop_of_years,
+                     prop_list_one = prop_list_one,
+                     prop_abs = prop_abs,
+                     prop_abs_list = prop_abs_list,
+                     nyears = nyears,
+                     Spnsite = Spnsite,
+                     Spnvisits = Spnvisits,
+                     SpvisitPerSite = SpvisitPerSite,
+                     SpvisitPerYear = SpvisitPerYear,
+                     Totalnsites = Totalnsites,
+                     Totalnvisits = Totalnvisits,
+                     TotalvisitPerYear = TotalvisitPerYear,
+                     Taxa_Root = tax_root,
+                     Taxa = tax_nom,
+                     stringsAsFactors = FALSE)
+    if(habitat){
+      df[, 'habitat'] <- hab
+    } else if(region){
+      df[, 'region'] <- hab
+    }
   })
   cat(as.numeric(timetaken[3]), 'seconds', '\n')
   return(df)
@@ -517,7 +579,7 @@ data_files <- list.files(data_files_path,
 data_files <- data_files[!grepl('Moths', data_files)]
 data_files <- data_files[!grepl('VascPlants', data_files)]
 
-for(data_file in data_files){
+dataPrep <- function(data_file){
   cat('Starting', basename(data_file))
   
   load(data_file)
@@ -530,14 +592,18 @@ for(data_file in data_files){
   formatted_data <- formatOccData(taxa = taxa_data$CONCEPT,
                                   site = taxa_data$TO_GRIDREF,
                                   time_period = taxa_data$TO_STARTDATE)
+  return(formatted_data)
+}
+
+for(data_file in data_files){
+  formatted_data <- dataPrep(data_file)
   
   spp <- unique(taxa_data$CONCEPT)
-  
-  # one group has a species called '', best to remove this (single) record
+    # one group has a species called '', best to remove this (single) record
   spp <- spp[spp != '']
   
   cat('\n', length(spp), 'species\n')
-
+  
   tFDall <- merge(formatted_data$occDetdata,
                   formatted_data$spp_vis)
 
@@ -548,8 +614,8 @@ for(data_file in data_files){
   tFDall <- tFDall[as.character(tFDall$site) %in% sites_to_include,]
   
   raw_metrics <- lapply(spp,
-                        FUN = rawDataMetrics,
-                        tFDall = tFDall,
+                        FUN = dataMetrics,
+                        species_obs = tFDall,
                         basen = basename(data_file))
   
   raw_metrics <- do.call(rbind, raw_metrics)
@@ -564,7 +630,7 @@ for(data_file in data_files){
   # now with just the last 10 years
   cat('\n', length(spp), 'species\n')
   raw_metrics <- lapply(spp,
-                        FUN = rawDataMetrics,
+                        FUN = dataMetrics,
                         tFDall = tFDall,
                         basen = basename(data_file),
                         suffix = '_last10yrs',
@@ -603,7 +669,9 @@ write.csv(master, file = 'Results/metrics/ALL_rawMetrics.csv',
 
 ## Classification of Models
 
-We can do some simple decision tree statistics to develop rules of thumb once we have decided what constitutes a 'bad' model. Here I choose some threholds that I think make for a bad model and use the `rpart` package to create a decision tree.
+### Create metrics
+
+We can do some simple decision tree statistics to develop rules of thumb once we have decided what constitutes a 'bad' model. Here I choose some metrics that make for a bad model and use the `rpart` package to create a decision tree.
 
 First, combine all the data
 
@@ -616,7 +684,9 @@ MM <- read.csv('Results/metrics/model_data.csv')
 MM <- MM[,c('speciesName','FirstYrConverged',
             'LastYrConverged','PropYrConverged')]
 
-# These merges drop a LOT of species that dont match
+# These merges drop a LOT of species that don't match. That is OK as the ones that don't
+# match do not meet the data minimum criteria or we do not have model data for them, so
+# cannot use them for predictions.
 trendsData <- merge(x = LM, y = RM,
                      by.x = 'species',
                      by.y = 'species')
@@ -625,26 +695,47 @@ trendsData <- merge(x = MM, y = trendsData,
 head(trendsData)
 str(trendsData)
 ```
+\pagebreak
+
+### Consultation on model outputs
 
 Next, define which of the species have 'good' models and which are 'bad'.
 
-This was done by consultation with 3 experts on the models, testing them on 100 models qhich were sampled to provide a spread of examples across the dataset, with a cluster of models focused around the range in which there was likely to be controversial.
+This was done by consultation with 3 experts on the models, testing them on 100 models which were sampled to provide a spread of examples across the dataset, with a cluster of models focused around the range in which there was likely to be controversial.
+
 
 ```{r definegoodandbadmodels}
 # Lets have a look at the distribution
 quantile(trendsData$precision_growth_rate)
+```
+
+
+```{r plot_hist,echo=FALSE,fig.cap="Histogram of the growth rate precision for all models"}
 ggplot(trendsData, aes(x = precision_growth_rate)) + geom_histogram(bins=20) +
   scale_x_log10(labels=scales::comma) + theme_light()
+```
+
+
+\pagebreak
+```{r definegoodandbadmodels2}
 quantile(trendsData$mean_year_precision)
+```
+
+
+```{r plot_hist2,echo=FALSE,fig.cap="Histogram of the mean year precision for all models"}
 ggplot(trendsData, aes(x = mean_year_precision)) + geom_histogram(bins=20) +
   scale_x_log10(labels=scales::comma) + theme_light()
+```
 
+
+\pagebreak
+Below are the results of the consultation.  This graph shows the score given to each model where the score is the number of experts who thought the model was of good quality.  The models not used in the assessment are shown in the background in grey
+```{r consultation_results}
 # Lets look at the results of the consultation with model experts
 fsdf <- read.csv(file = 'Results/Consultation/fsdf_full.csv')
+```
 
-# Plot the results of the consultation.  This graph shows the score given to each model
-# where the score is the number of experts who thought the model was of good quality
-# The models not used in the assessment are shown in the background in grey
+```{r plot_consultation,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, plotting mean year precision vs growth rate precision"}
 ggplot() +
   geom_point(data=trendsData[trendsData$mean_year_precision>6&
                                trendsData$mean_year_precision<1000000&
@@ -658,11 +749,6 @@ ggplot() +
              aes(x=precision_growth_rate,
                  y=mean_year_precision,
                  color=as.factor(score))) +
-  geom_text(data=fsdf,
-            aes(x=precision_growth_rate,
-                y=mean_year_precision,
-                label=paste0(fsdf$ID)),
-            hjust=-0.3, vjust=-0.1, size=2) +
   scale_x_log10(limits=c(0.001,10),labels=scales::comma) +
   scale_y_log10(limits=c(6,1000000),labels = scales::comma) +
   theme_light() +
@@ -670,7 +756,10 @@ ggplot() +
                      name='Model score') +
   labs(title='What determines a "bad" model?') +
   xlab("Growth Rate Precision") + ylab("Mean Year Precision")
+```
 
+
+```{r plot_consultation2,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, plotting mean year precision vs the proportion of years which converged. Coloured points show the score assigned to models: light blue represents a score of 3 or unanimously a good model; black shows a score of 0, or unanimously a bad model.  Light grey points in the background show all models which were not part of the consultation"}
 ggplot() +
   geom_point(data=trendsData[trendsData$mean_year_precision>6&
                                trendsData$mean_year_precision<1000000,],
@@ -682,11 +771,6 @@ ggplot() +
              aes(x=PropYrConverged,
                  y=mean_year_precision,
                  color=as.factor(score))) +
-  geom_text(data=fsdf,
-            aes(x=PropYrConverged,
-                y=mean_year_precision,
-                label=paste0(fsdf$ID)),
-            hjust=-0.3, vjust=-0.1, size=2) +
   scale_x_continuous(limits=c(0,1),labels=scales::comma) +
   scale_y_log10(limits=c(6,1000000),labels = scales::comma) +
   theme_light() +
@@ -695,35 +779,48 @@ ggplot() +
   labs(title='What determines a "bad" model?') +
   xlab("Proportion of Years which Converged") + ylab("Mean Year Precision")
 ```
-The graphs above show the results of the consultation with experts on the model.  There was unanimous agreement on 80% of the models about which were 'good' and 'bad'.  The models chosen for this consultation were deliberately difficult to tell apart, so a 80% unanimous agreeement is considered very good.
 
-The score shown on the graphs above are the number of experts who viewed the model as a good model.  Therefore, a score of 3 means the model was deemed unanimously acceptable, a score of 0 means the model was deemed unanimously unacceptable.
+
+\pagebreak
+The graphs above show the results of the consultation with experts on the model.  There was unanimous agreement on 80% of the models about which were 'good' and 'bad'.  The models chosen for this consultation were deliberately difficult to tell apart, so a 80% unanimous agreeement is considered very good.
 
 Plotting these scores against proportion of years which converged, mean year precision and growth rate precision show that these parameters are correlated with quality, but it is not obvious how to perform this split.
 
+### Classification tree
+
 To decide which models would be classified as good and bad, a decision tree was created to automatically classify the 100 models tested on.  The models with a score of 2 or 3 were classified as good, while the models with a score of 0 or 1 were classified as bad.
 
-Two decision trees are shown below, one using convergence rates, and the other not, for comparison.
+Two decision trees are shown below, one using the proportion of years converged, and the other not, for comparison.
 
-```{r plotdecisions}
+
+```{r decisions_precision}
 fsdf$good <- rep('bad',nrow(fsdf))
 fsdf$good[fsdf$score>=2] <- 'good'
 
 fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate,
                   method = 'class',
                   data = fsdf)
+```
 
+
+```{r plot_tree_precision, fig.cap="Decision tree for deciding which models are good or bad based on precision only"}
 plot(fit_fsdf, uniform=TRUE, 
      main = "Which models are good or bad (precision only)?",
      margin = .1)
 text(fit_fsdf, use.n = TRUE,
      all = TRUE,
      cex = .7)
+```
 
+
+```{r decisions_convergence}
 fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate + PropYrConverged,
                   method = 'class',
                   data = fsdf)
+```
 
+
+```{r plot_tree_convergence,fig.cap="Decision tree for deciding which models are good or bad based on precision and convergence"}
 plot(fit_fsdf, uniform=TRUE, 
      main = "Which models are good or bad (precision and convergence)?",
      margin = .1)
@@ -731,6 +828,9 @@ text(fit_fsdf, use.n = TRUE,
      all = TRUE,
      cex = .7)
 ```
+
+
+\pagebreak
 The success of the decision tree for classifying bad models is:
 
 * Using precision only:  92% for bad models, 85% for good models
@@ -742,6 +842,7 @@ Using both metrics is clearly better for splitting good and bad models, therefor
 * If the proportion of years converged is < 0.3437, the model will be classified as 'bad' if the mean year precision is < 149.3
 
 * If the proportion of years converged is >= 0.3437, the model will be classified as 'bad' if the mean year precision is < 60.2
+
 
 ## Classifying the data
 
@@ -757,7 +858,7 @@ This was done for all variables and the results from two of the variables are sh
 
 The prop_repeats_grp data shows a broad range of results from 0 to 1 for all taxonomic groups.  By contrast, the prop_abs_list data shows very clear division between taxonomic groups.  Therefore, any partitioning on the basis of this variable is effectively a taxonomic division.  For this reason, prop_abs_list will not be used for producing decision trees.
 
-```{r violin}
+```{r violin,echo=FALSE}
 violin <- function(y,title=NULL){
 ggplot(td_taxa, aes(x=Taxa,y=y)) +
   geom_violin(trim=TRUE) +
@@ -765,12 +866,24 @@ ggplot(td_taxa, aes(x=Taxa,y=y)) +
   theme(axis.text.x = element_text(angle=90, hjust=1, vjust = 0.3)) +
   ggtitle(title)
 }
+```
+
+```{r subset_for_violin}
 # Subset data to remove last 10 yr data, as it just makes the plot messier
 td_taxa <- trendsData[as.character(trendsData$Taxa)==
                       as.character(trendsData$Taxa_Root),]
-violin(td_taxa$prop_repeats_grp,title='prop_repeats_grp Violin Plot')
-violin(td_taxa$prop_abs_list,title='prop_abs_list Violin Plot')
 ```
+```{r prop_repeats_grp_violin,echo=FALSE,fig.cap="Violin plot for the prop_repeats_grp variable, defined as the proportion of all site:year combinations, where the focal species is observed, that have more than 1 visit for that taxonomic group"}
+violin(td_taxa$prop_repeats_grp,title='Violin Plot of the proportion of repeats')
+```
+
+
+```{r prop_abs_violin,echo=FALSE,fig.cap="Violin plot for the prop_abs_list variable, defined as the proportion of records with list length greater than 1, for all records where the focal species was not observed"}
+violin(td_taxa$prop_abs_list,title='Violin Plot of proportion of absence data')
+```
+
+
+\pagebreak
 
 ### Correlation between variables
 
@@ -778,17 +891,19 @@ To examine the between all the variables, a pairs plot is produced below.  As ca
 
 Apart from number of records, which is not included in the classification tree, the variables show little cross correlation, suggesting they are a good choice for building a decision tree.
 
-```{r pairspanels}
+```{r pairspanels,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest"}
 td_sub <- trendsData[,c('P90','visits_P90','prop_of_years',
                            'prop_repeats_grp','prop_list_one',
                            'prop_abs','Spnvisits')]
 pairs.panels(td_sub, hist.col = 'blue',smooth = TRUE)
-
 ```
 
-### Input data caveat
 
-In order to be included in the dataset, one key step was carried out to remove some of the data.  This step was to remove all records from visits to sites that never saw a repeat visit in any other years, for that taxonomic group.  This step removed 33% of all records across our database.
+\pagebreak
+
+### Input data requirement
+
+In order to be included in the dataset, one preliminary filtering step was carried out to remove some of the data.  This step was to remove all records from visits to sites that never saw a repeat visit in any other years, for that taxonomic group.  This step removed 33% of all records across our database.
 
 * For instance, if a dragonfly was recorded in one site in 1990, if there was one more record of any dragonfly at that site in any year except 1990, both records would be included.
 
@@ -822,7 +937,8 @@ for(taxa in sort(unique(RM$Taxa))){
 }
 
 taxa_melt <- melt(df, id=c('taxa'))
-
+```
+```{r stack_fn, echo=FALSE}
 # Plot the results
 stack_records <- function(df,colours,ylabel,title){
   ggplot(data=df,
@@ -835,13 +951,17 @@ stack_records <- function(df,colours,ylabel,title){
     scale_x_discrete(limits = rev(levels(df$taxa))) +
     coord_flip()
 }
-
+```
+```{r stack_all,fig.cap='Graph showing the proportion of records which are included in the models. Those which are not are excluded or to sites which only received visit(s) in one year within the taxonomic group'}
 stack_records(taxa_melt, colours = c('red', '#9999FF'),
               ylabel = 'Proportion of records',
               title = 'Proportion of records which are included')
 ```
 
-### Classification
+
+\pagebreak
+
+### Classification trees
 
 #### Equally weighted decision tree
 
@@ -864,7 +984,7 @@ trendsData$bad[(trendsData$PropYrConverged < 0.3437 &
 badweight <- 1
 goodweight <- 1
 
-fit <- rpart(bad ~ median + P90 +
+fit <- rpart(bad ~ median + P90 + zmedian + zP90 +
                visits_median + visits_P70 + visits_P80 + visits_P90 +
                prop_of_years + prop_repeats_grp + prop_list_one +
                prop_abs,
@@ -872,8 +992,25 @@ fit <- rpart(bad ~ median + P90 +
         data = trendsData,
         parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)))
 
-printcp(fit) # display the results 
-plotcp(fit) # visualize cross-validation results 
+printcp(fit) # display the results
+```
+```{r plotcp, echo=FALSE, fig.cap='Visual representation of the results. Plotted is cross-validation error vs the complexity parameter'}
+plotcp(fit) # visualize cross-validation results
+```
+
+
+\pagebreak
+Below is a summary of the fit calculations.  The relative importance of the variables are shown, which highlights that the most important variables are:
+
+* `P90`: 90th percentile of records in a year for the species of interest
+* `median`: median of records in a year for the species of interest
+* `prop_abs`: proportion of visits within a taxonomic group which did not record the species of interest
+* `prop_of_years`: proportion of years wiuth records for the species of interest
+* `visits_P90`: 90th percentile of records in a year, for sites where the species of interest was observed in that year
+* `prop_list_one`: proportion of records for which the species of interest is recorded, with list length of 1
+
+
+```{r fit_summary,fig.cap='Unpruned decision tree for species occupancy modelling'}
 summary(fit) # detailed summary of splits
 
 # plot tree
@@ -883,7 +1020,10 @@ plot(fit, uniform=TRUE,
 text(fit, use.n = TRUE,
      all = TRUE,
      cex = .7)
+```
 
+
+```{r fit_pruned,fig.cap='Pruned decision tree for species occupancy modelling'}
 # prune the tree 
 pfit <- prune(fit, cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
 
@@ -894,11 +1034,13 @@ plot(pfit, uniform=TRUE,
 text(pfit, use.n = TRUE, all = TRUE, cex = .7)
 ```
 
-The decision tree with equal weighting to good and bad results shows a recall (chance of correct prediction) of 82% for good models and 85% for bad models, when the good/bad classifications are equally weighted.  The precision (chance of classification being correct) for good models is 89% and 77% for bad models.
+
+\pagebreak
+The decision tree with equal weighting to good and bad results shows a recall (chance of correct prediction) of 82% for good models and 85% for bad models, when the good/bad classifications are equally weighted.  The precision (chance of classification being correct) for good models is 89% and 78% for bad models.
 
 To explain this decision tree in words:
 
-After removing all data from sites which never saw a repeat visit in subsequent year for any species within the taxonomic group (see input data caveat):
+After removing all data from sites which never saw a repeat visit in subsequent year for any species within the taxonomic group (see *Input Data Requirement*):
 
 * P90>=3.4: The 90th percentile of number of visits per year *in which there was at least one visit* must be greater than 3.4 or the model will definitely be classified as bad
     + For example, a species with 11 records, for which the second largest record was 4, would meet this target as the P90 would be 4.
@@ -910,8 +1052,6 @@ If the data meets this criterion, it still must meet one of these two criteria t
 * P90>=8.65 OR
 * prop_abs>=0.9867.  Prop_abs is the proportion of records for the taxonomic group which do not include the species of interest.
     + For example, if there were 2000 records within a group, and 40 records of the species of interest, prop_abs would be (2000-40)/2000 = .98.  This species would therefore not meet this criterion.  However, a species with 40 records within a group of 4000 records would meet this criterion (prop_abs = .99).
-
-#### Examining the equally weighted classification
 
 Lets assess the quality of this decision tree
 ```{r assessresults}
@@ -926,7 +1066,8 @@ td$data_good[(td$Node1)&(td$Node2|td$Node3)] <- 'good'
 
 td$model_good <- rep('good',length(td$bad))
 td$model_good[td$bad=='bad'] <- 'bad'
-
+```
+```{r plot_pie_fn,echo=FALSE}
 plot_pie <- function(subdata,numrow,title){
   numrecords <- nrow(subdata)
   numgood <- length(subdata$model_good[subdata$model_good=='good'])
@@ -951,12 +1092,12 @@ plot_pie <- function(subdata,numrow,title){
     theme(plot.title = element_text(size=10))
 }
 ```
-Below are two pie charts showing how many of our `r nrow(td)` species datasets have been classified as likely to produce 'good' or 'bad' models by this decision tree, and what percentage of those models were actually good (above the average precision threshold) or bad (below the threshold).
+Below are two pie charts showing how many of our `r nrow(td)` species datasets have been classified as likely to produce 'good' or 'bad' models by this decision tree, and what percentage of those models were actually good (above the average precision and convergence thresholds) or bad (below the thresholds).
 
 **Classifying the data as likely to produce a good model:**
 
 P90>=3.4 & (P90>=8.65 OR prop_abs>=0.9867)
-```{r piegood, fig.height = 2.5}
+```{r piegood, fig.height = 2.5, fig.cap='Pie chart showing all the models which are classified as good, and what proportion of them are actually good.  This shows that the precision of this classification is 89%'}
 plot_pie(td[(td$data_good)=='good',],
          nrow(td),
          "Classified as good")
@@ -965,34 +1106,34 @@ plot_pie(td[(td$data_good)=='good',],
 **Classifying the data as likely to produce a 'bad' model:**
 
 P90<3.4 OR (P90>=3.4 & P90<8.65 & prop_abs<0.9867)
-```{r piebad, fig.height = 2.5}
+```{r piebad, fig.height = 2.5, fig.cap='Pie chart showing all the models which are classified as bad, and what proportion of them are actually bad.  This shows that the precision of this classification is 78%'}
 plot_pie(td[(td$data_good)=='bad',],
          nrow(td),
          "Classified as bad")
 ```
 
-#### Non-equally weighted classifications
 
-The decision tree is computed again twice more below.  In the models below, the penalty of misclassifying good models as bad, or misclassifying bad models as good, is varied.  With a 10:1 good:bad ratio, the decision tree can be considered an aspirational target.  A 1:10 good:bad ration would be a bare minimum 'is it worth having a go at running a model' threshold.
+\pagebreak
 
 #### 10:1 Good:bad tree - Aspirational Target
 
-```{r goodtree}
+The decision tree is computed again twice more.  In these models, the penalty for misclassifying good models as bad, or vice versa, is varied.
+
+The first one below is with a 10:1 good:bad ratio i.e. it is 10x more important to correctly classify good models as good.  This means that any models which are classified as good are very likely to be good.  As such, this decision tree can be considered an aspirational target.
+
+```{r goodtree,fig.cap='Decision tree for aspirational targets'}
 # produce a decision tree for goodweight = 10
 badweight <- 1
 goodweight <- 10
-fit_good <- rpart(bad ~ median + P90 +
-                    visits_median + visits_P70 + visits_P80 + visits_P90 +
-                    prop_of_years + prop_repeats_grp + prop_list_one +
-                    prop_abs,
+fit_good <- rpart(bad ~ median + P90 + zmedian + zP90 + visits_median + visits_P70 +                         visits_P80 + visits_P90 + prop_of_years + prop_repeats_grp +
+                    prop_list_one + prop_abs,
              method = "class",
              data = trendsData,
              parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)))
 
 # prune the tree 
 pfit_good <- prune(fit_good,
-                   cp = fit_good$cptable[which.min(fit_good$cptable[,"xerror"]),
-                                         "CP"])
+                   cp = fit_good$cptable[which.min(fit_good$cptable[,"xerror"]),"CP"])
 
 # plot the pruned tree 
 plot(pfit_good, uniform=TRUE, 
@@ -1001,11 +1142,13 @@ plot(pfit_good, uniform=TRUE,
 text(pfit_good, use.n = TRUE, all = TRUE, cex = .7)
 ```
 
+
+\pagebreak
 In the case of the 10:1 good:bad tree, the tree is very simple.  If P90>=8.65, the data are likely to produce a good model.
 
 The precision of this decision is 95%, while the precision of the bad classification is 58%.  The recall for good models is 53% and 96% for bad models.  This means only 53% of data that might produce a good model are deemed good enough.  However, if  data meet this threshold, they are very likely going to produce a good model.
 
-To show how this split applies to all the data, a plot is shown below.  On the x-axis are all the taxonomic groups, while the y-axis shows the P90 with the 8.65 cutoff shown as a horizontal bar.  Red circles represent models which have been classified as bad, while blue are good.
+To show how this split applies to all the data, a plot is shown below showing how this split applies to all species across all taxonomic groups in the database.
 
 As can be seen, this split does a good job of removing most bad models, with the exception of some models from taxonomic groups which in general do not have many records per species, such as FungusGnats and RoveBeetles.
 
@@ -1033,7 +1176,8 @@ for(i in 1:length(names)){
   names_long[i*3-1] <- names[i]
   names_long[i*3] <- ''
 }
-
+```
+```{r plot_jiggle_plot, echo=FALSE, fig.cap='Graph showing all species in the database split by taxonomic group.  On the y-axis are all the taxonomic groups, while the x-axis shows the P90 with the 8.65 cutoff shown as a vertical bar.  Red circles represent models which have been classified as bad, while blue are good.  Any circles to the right of the line represent species data which would be expected to produce a good model (95% of such datasets did in fact produce a good model).  Any circles to the left represent species data which may or may not produce a good model (42% of these datasets actually produced a good model).'}
 ## Data wrangling complete, plot it up
 ggplot(td_taxa, aes(Taxa, P90), main = 'Title') +
   geom_jitter(aes(reorder(cat,desc(cat)), P90), data = td_taxa,
@@ -1047,13 +1191,18 @@ ggplot(td_taxa, aes(Taxa, P90), main = 'Title') +
   coord_flip()
 ```
 
+
+\pagebreak
+
 #### 1:10 Good:bad tree - bare minimum to try running a model
 
-```{r badtree}
+The decision tree below is with a 1:10 good:bad ratio i.e. it is 10x more important to correctly classify bad models as bad  This means that any models which are classified as bad are very likely to be bad, while a model classified as good may or may not be actually good.  As such, this decision tree can be considered a bare minimum threshold.
+
+```{r badtree, fig.cap='Decision tree for aspirational targets'}
 # produce a decision tree for badweight = 10
 goodweight <- 1
 badweight <- 10
-fit_bad <- rpart(bad ~ median + P90 +
+fit_bad <- rpart(bad ~ median + P90 + zmedian + zP90 +
                     visits_median + visits_P70 + visits_P80 + visits_P90 +
                     prop_of_years + prop_repeats_grp + prop_list_one +
                     prop_abs,
@@ -1073,23 +1222,30 @@ plot(pfit_bad, uniform=TRUE,
 text(pfit_bad, use.n = TRUE, all = TRUE, cex = .7)
 ```
 
+
+\pagebreak
+
 The 1:10 good:bad tree is more complex, and requires some disentangling.
 
-If P90>=2.15 the model will be classified a good.  This is a sensible low threshold and what is expected.  However, beyond this point the decision tree looks more surprising.
+A dataset will be classified as good enough if it meets any of the following criteria:
 
-The decision tree has been run without number of records as a variable.  This is because it is desirable to have these decision trees time independent, and number of records was deemed to be related to the number of years over which data has been collected, rather than quality of the data.
+* P90>=2.15
+* prop_of_years>=0.06742 and either:
+    + visits_P90<3.15 and P90<2.15 OR
+    + 2.15>P90>=1.75 and prop_abs>=0.9961
+* P90<1.75 and prop_of_years>=0.2135
 
-However, a number of the variables in the decision tree can act as proxies for number of records.  Prop_abs for instance will be very high if number of records is very low.  Prop_abs < 0.9999 is therefore a proxy for number of records > some very low number.
+The decision tree produces a precision and recall for bad models of 96% and 40% respectively, and 71% and 99% for good models.  This means that if the data does not meet these criteria, there is a 96% of it producing a poor model.
 
-Similarly, prop_of_years is acting as a number of records proxy.  To be classified as good, prop_of_years must be < 0.9 and >= 0.1807.  This seems initially surprising, but makes sense on reflection.  If prop_of_years is < 0.9, there must be more than one record, as records must be spread across more than one year, otherwise prop_of_years would be 1.
+The first node alone (is P90>=2.15) gives a precision and recall for bad models of 88% and 63%, and for good models 79% and 94%.  This means that if the data does not meet this threshold, there is a 88% of it producing a poor model.
 
-However, if prop_of_years < 0.1807, the records will be too sparsely spread out to be useful.
+If Spnvisits (number of records) is allowed back into the decision tree, the only question that needs to be asked is: are there at least 2 records?  This results in a precision and recall for bad models of 97% and 21%, and 67% and 99.5% for good models, a similar classification rate for a much simpler decision tree.
 
-The decision tree produces a precision and recall for bad models of 97% and 29% respectively, and 67% and 99% for good models.  If Spnvisits (number of records) is allowed back into the decision tree, the only question that needs to be asked is: are there at least 2 records?  This results in a precision and recall for bad models of 97% and 21%, and 67% and 99.5% for good models, a similar classification rate for a much simpler decision tree.
+## How many species can we model?
 
-## How many species can we model in each habitat/region?
+### For the UK
 
-Based on the work above, we can calculate how many speices we can model for taxa across multiple habitat and regional areas.
+Based on the work above, we can estimate how many species we can model for taxa across the whole of the UK and across multiple habitat and regional areas.
 
 To provide a benchmark, below are two plots for all taxa for all UK data.  The first graphs shows absolute values, while the second shows the proportion of species for each taxonomic group.
 
@@ -1109,59 +1265,73 @@ calc_bad <- function(df){
   df$data_good <- df$data_aspire <- rep('bad',length(df$species))
   df$data_good[(df$Node1)&(df$Node2|df$Node3)] <- 'good'
   df$data_aspire[df$Node2] <- 'good'
-  df
+  if(!is.null(df$habitat)){
+    df$habitat <- as.character(df$habitat)
+  }
+  if(!is.null(df$ragion)){
+    df$region <- as.character(df$region)
+  }
+  if(!is.null(df$code)){
+    df$code <- as.character(df$code)
+  }
+  return(df)
 }
-RM <- calc_bad(RM)
 
 # Function to extract data from data frame
 #  df = a trendsData data frame
-#  prop = is the graph to show proportion of species (vs absolute numbers)
-#  hab = habitat of interest
-#  reg = region of interest, either full name or NUTS code
+#  proportional = is the graph to show proportion of species (vs absolute numbers)
+#  habitat = habitat of interest
+#  region = region of interest, either full name or NUTS code
 #  zeroes = are species with no records (Spnvisits==0) to be included?
-#  aspire = is the cutoff the aspirational target (10:1 good:bad)?
-#  melt = is the long table for plotting required?
-num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
-                     zeroes=TRUE,aspire=FALSE){
+#  aspirational = is the cutoff the aspirational target (10:1 good:bad)?  If this is
+#    false, the default 1:1 decision tree is used
+#  long_table = is the long table for plotting required?
+num_spec <- function(df, habitat=NULL, region=NULL, proportional=FALSE,
+                     long_table=TRUE, zeroes=TRUE, aspirational=FALSE){
   taxa_num <- NULL
   if(!zeroes){
-    df <- df[df$Spnvisits!=0,]
+    df <- df[df$Spnvisits != 0,]
   }
   for(taxa in sort(unique(df$Taxa))){
-    num_spec <- length(unique(df$species[df$Taxa==taxa]))
+    num_spec <- length(unique(df$species[df$Taxa == taxa]))
     taxa_num <- rbind(taxa_num,
                       data.frame(taxa = taxa,
                                  num_spec = num_spec))
   }
 
-  if(!is.null(hab)){
-    df <- df[as.character(df$habitat)==hab,]
+  if(!is.null(habitat)){
+    df <- df[as.character(df$habitat) == habitat,]
   }
-  if(!is.null(reg)){
-    if(grepl('UK[A-Z]',reg)){
-      df <- df[as.character(df$code)==reg,]
+  if(!is.null(region)){
+    if(grepl('UK[A-Z]', region)){
+      df <- df[as.character(df$code) == region,]
     } else {
-      df <- df[as.character(df$region)==reg,]
+      df <- df[as.character(df$region) == region,]
     }
   }
   taxa_count <- NULL
   for(taxa in sort(unique(taxa_num$taxa))){
-    if(aspire){
-      data_good <- length(df$Taxa[df$Taxa==taxa&df$data_aspire=='good'])
-      data_bad  <- length(df$Taxa[df$Taxa==taxa&df$data_aspire=='bad'])
+    if(aspirational){
+      data_good <- length(df$Taxa[df$Taxa == taxa &
+                                    df$data_aspire == 'good'])
+      data_bad  <- length(df$Taxa[df$Taxa == taxa &
+                                    df$data_aspire == 'bad'])
     } else {
-      data_good <- length(df$Taxa[df$Taxa==taxa&df$data_good=='good'])
-      data_bad  <- length(df$Taxa[df$Taxa==taxa&df$data_good=='bad'])
+      data_good <- length(df$Taxa[df$Taxa == taxa &
+                                    df$data_good == 'good'])
+      data_bad  <- length(df$Taxa[df$Taxa == taxa &
+                                    df$data_good == 'bad'])
     }
-    no_data <- length(df$Taxa[df$Taxa==taxa&df$Spnvisits==0])
+    no_data <- length(df$Taxa[df$Taxa == taxa &
+                                df$Spnvisits == 0])
     tmpdf <- data.frame(taxa = taxa,
                         no_data = no_data,
                         bad = data_bad - no_data,
                         good = data_good)
-    taxa_count <- rbind(taxa_count,tmpdf)
+    taxa_count <- rbind(taxa_count, tmpdf)
   }
  
-  taxa_count <- merge(taxa_count,taxa_num)
+  taxa_count <- merge(taxa_count, taxa_num)
   taxa_count$no_data <- taxa_count$num_spec - taxa_count$bad - taxa_count$good
 
   # Convert data table for turning into graphs
@@ -1174,10 +1344,10 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
   taxa_prop$bad[taxa_prop$num_spec==0] <- 0
   taxa_prop$good[taxa_prop$num_spec==0] <- 0
   taxa_prop_melt <- melt(taxa_prop, id=c('num_spec','taxa'))
-  if(prop){
+  if(proportional){
     taxa_melt <- taxa_prop_melt
   }
-  if(melt){
+  if(long_table){
     return(taxa_melt)
   } else {
     return(taxa_count)
@@ -1206,58 +1376,296 @@ stack_taxa <- function(df,prefix=NULL){
   stack_records(df,colours,ylabel,title)
 }
 
-# Plot the graphs
+RM <- calc_bad(RM)
+```
+```{r RM_basic,fig.cap='Plot of number of species which can be modelled, split by taxonomic group.  Blue shows species which can be modelled, red those which cannot.  Grey are those for which there is no data, due to there being no records which meet the requirement of coming from sites with repeat visits in any subsequent years.'}
+# Plot the basic graph
 num_spec(RM) %>% stack_taxa()
-num_spec(RM,prop=TRUE) %>% stack_taxa()
+```
+
+
+\pagebreak
+```{r RM_prop,fig.cap='Plot of number of species which can be modelled, as a proportion of the total number of species for each taxonomic group.'}
+num_spec(RM,proportional=TRUE) %>% stack_taxa()
+```
+
+
+\pagebreak
+```{r RM_asp,fig.cap='Plot of number of species which can be modelled using the aspirational target.  As this is the aspirational target, the number of species which can be modelled is lower'}
 # Plot aspirational graph
-num_spec(RM,aspire=TRUE,prop=TRUE) %>%
+num_spec(RM,aspirational=TRUE,proportional=TRUE) %>%
   stack_taxa(prefix = 'Aspirational')
 ```
 
+
+\pagebreak
+
 ### By habitat
 
-The raw metrics for each habitat have been calculated from the raw data.  Using these data, the proportion of species which can be modelled for each habitat can be assessed.
+The possible habitats are shown in Table 1.
 
-```{r habmetrics}
-# Read in the habitat raw metrics
-RM_hab <-
-  read.csv(file = file.path('Habitat/HabMetrics/ALL_habMetrics.csv'))
+```{r disp_hab_table}
 # Display the list of possible habitats
 hab_list <- read.csv('Habitat/Habitat_List.csv')
 column_spec(kable(hab_list, format = 'latex',
                   caption = 'List of available habitats'),
             2, width = "8cm")
+```
 
+
+To calculate the raw metrics for each habitat, the squares in the UK all need to be assigned to a habitat.  To do so, a habitat datafile is read in and the range of percentage cover for each habitat is extracted.  This produces a list of coverage for each habitat such as:
+
+* Habitat: BLW; Coverage: 1%, 1%, 2%, 3% ... 95%, 98%, 99%
+
+From this list, the median coverage for each habitat is calculated.  Each square in the UK which has above this median coverage is assigned to that habitat.  Therefore it is possible for a square to contain multiple habitats or not represent any habitat.
+
+```{r extract_hab_values, eval=FALSE}
+# Read in land habitat coverage data file
+UK_land <- readRDS(file.path('./Habitat/UK_land.rds'))
+UK_land_GR <- UK_land
+UK_land_GR$easting = UK_land$easting + 500
+UK_land_GR$northing = UK_land$northing + 500
+
+UK_land_GR$site <- gr_num2let(easting = UK_land_GR$easting,
+                            northing = UK_land_GR$northing)
+UK_land_GR$site <- paste0(substr(x = UK_land_GR$site, start = 1, stop = 4),
+                          substr(x = UK_land_GR$site, start = 8, stop = 9))
+
+##coverage is in km squared
+total_coverage <- colSums(UK_land[,3:ncol(UK_land)])
+
+##now also want number of kmsq with any cover of each habitat
+UK_land_any_hab <- ifelse(UK_land[,3:ncol(UK_land)]>0, 1, 0)
+total_coverage_squares <- colSums(UK_land_any_hab)
+
+##now look at coverage for each of quantiles
+quants <-
+  data.frame(apply(UK_land[,3:ncol(UK_land)], 2, function(x){
+    quantile(x[x>0], probs = c(0.25, 0.50, 0.75))
+  }))
+
+for(i in 1:length(quants)){
+  for(j in 1:3){
+    ##subset data in quant to quantile ranges (25%, 50%, 75%)
+    sub_UK <- subset(UK_land, UK_land[,names(quants)[i]] > quants[j ,i])
+    sub_UK_any_hab <- ifelse(sub_UK[,3:ncol(sub_UK)] > 0, 1, 0)
+    quants_sums[j,i] <- sum(sub_UK_any_hab[,names(quants)[i]])
+  }
+}
+```
+
+
+Now calculate the metrics for each habitat
+
+
+```{r calc_hab_metrics, eval=FALSE}
+hab_names <- colnames(UK_land[,3:ncol(UK_land)])
+for(data_file in data_files){
+  formatted_data <- dataPrep(data_file)
+  
+  spp <- unique(taxa_data$CONCEPT)
+    # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  
+  # Create combined dataframe
+  species_obs <-
+    formatted_data$occDetdata %>% left_join(formatted_data$spp_vis,by="visit")
+  species_obs$site <- as.character(species_obs$site)
+  # Combine with habitat data
+  species_obs <- species_obs %>% left_join(UK_land_GR,by="site")
+  ## Remove NA's
+  species_obs <- species_obs[!is.na(species_obs$CWL),]
+  
+  yps <- rowSums(acast(species_obs, site ~ year, length, value.var = 'L') > 0)
+  sites_to_include <- names(yps[yps >= 2])  
+  species_obs <- species_obs[(species_obs$site %in% sites_to_include),]
+  
+  spp_ch <- as.character(spp)
+  raw_metrics <- data.frame()
+  
+  # At the group level, determine records with above average habitat coverage
+  for(hab in hab_names){
+    ## Find visits with above median coverage for this habitat
+    above_av <- species_obs[,colnames(species_obs) == hab]>=
+      quants[rownames(quants) == '50%',colnames(quants) == hab]
+    species_obs[,paste0(hab,'_hab')] <- above_av
+  }
+
+  # For each species, find the visits with just that species recorded
+  i <- 1
+  for(sp in spp_ch){
+    if((i %% 10) == 0){cat('  Species',i,'of',length(spp_ch),'\n')}
+    if(sp %in% names(species_obs)){
+      taxa_rec <-
+        species_obs[,names(species_obs) %in% c('visit','site','L','year',
+                                               sp,hab_names,
+                                               paste0(hab_names,'_hab'))]
+      for(hab in hab_names){
+        ## Extract the metrics for each habitat
+        function(sp, species_obs, basen, suffix = NULL, years = NULL)
+        speciesMetric <- dataMetrics(hab = hab,
+                                     sp = sp,
+                                     basen = basename(data_file),
+                                     species_obs = taxa_rec,
+                                     habitat = TRUE)
+        raw_metrics <- rbind(raw_metrics, speciesMetric)
+      }
+    }
+    i <- i+1
+  }
+  group_name <- regmatches(basename(data_file),
+                           regexpr('[A-z]+(?=_)',
+                                   basename(data_file),
+                                   perl=TRUE))
+  write.csv(raw_metrics,
+            file = file.path('./Habitat/HabMetrics',
+                             paste0('habMetrics_',
+                                    gsub('.rdata$', '.csv',
+                                         basename(data_file)))),
+            row.names = FALSE)
+}
+
+td <- data.frame()
+file_list <- list.files(file.path('./Habitat/HabMetrics'),
+                        patter = '.csv$',
+                        full.names = TRUE)
+
+for(i in file_list){
+  tmp <- read.csv(i)
+  td <- rbind(td,tmp)
+}
+
+write.csv(x = td, file.path('./Habitat/HabMetrics/ALL_habMetrics.csv'))
+```
+
+The raw metrics for each habitat have now been calculated from the raw data.  Using these data, the proportion of species which can be modelled for each habitat can be assessed.
+
+```{r habmetrics}
+# Read in the habitat raw metrics
+RM_hab <-
+  read.csv(file = file.path('Habitat/HabMetrics/ALL_habMetrics.csv'))
+```
+```{r calculate_habitats}
 # Calculate which datasets are likely to produce good or bad models
 RM_hab <- calc_bad(RM_hab)
-RM_hab$habitat <- as.character(RM_hab$habitat)
-
-# Plot up a sample graph for broad leaf woodland
-num_spec(RM_hab,hab='BLW',prop=TRUE) %>%
-  stack_taxa(prefix='B-L Woodland')
-# And for coastal
-num_spec(RM_hab,hab='C',prop=TRUE) %>% stack_taxa(prefix='Coastal')
 ```
+```{r plot_BLW,fig.cap='Proportion of species which can be modelled in broad-leaf woodland'}
+# Plot up a sample graph for broad leaf woodland
+num_spec(RM_hab,habitat='BLW',proportional=TRUE) %>%
+  stack_taxa(prefix='B-L Woodland')
+```
+
+
+\pagebreak
+```{r plot_coastal,fig.cap='Proportion of species which can be modelled in coastal habitats'}
+# And for coastal
+num_spec(RM_hab,habitat='C',proportional=TRUE) %>% stack_taxa(prefix='Coastal')
+```
+
+
+\pagebreak
 
 ### By region
 
-The data can also be split by region.  For this we read in the region data file and query the data by region.
+The data can also be split by region.  Splitting by region is simpler than for habitat as all squares in the UK exist within a region which can be obtained from the NUTS lookup table.  The data is then subset by region and the metrics extracted for each of these regions.
+
+```{r calc_metrics_region,eval=FALSE}
+regions <- read.csv(file.path('./Region/NUTS1_1km_dupsorted.csv'))
+regions <- regions[,c(2,4)]
+
+for(data_file in data_files){
+  formatted_data <- dataPrep(data_file)
+  spp <- unique(taxa_data$CONCEPT)
+  spp <- spp[spp != '']
+  
+  # Create combined dataframe
+  yps <- rowSums(acast(formatted_data$occDetdata,
+                       site ~ year, length, value.var = 'L') > 0)
+  sites_to_include <- names(yps[yps >= 2])
+  formatted_data$occDetdata <-
+    formatted_data$occDetdata[(formatted_data$occDetdata$site %in%
+                                 sites_to_include),]
+  species_obs <-
+    formatted_data$occDetdata %>% left_join(formatted_data$spp_vis,by="visit")
+  species_obs$site <- as.character(species_obs$site)
+
+  raw_metrics <- data.frame()
+  species_obs <- merge(x = species_obs, y = regions, by.x= 'site', by.y = 'km_sq')
+  
+  # For each species, find the visits with just that species recorded
+  for(sp in as.character(spp)){
+    if(sp %in% names(species_obs)){
+      taxa_rec <- 
+        species_obs[,names(species_obs) %in% c('visit','site','nutsname',
+                                               'L','year',sp)]
+      nutsnames <- as.character(unique(species_obs$nutsname))
+      for(region in nutsnames){
+        ## Extract the metrics for each habitat
+        speciesMetric <- dataMetrics(hab = region,
+                                     sp = sp,
+                                     basen = basename(data_file),
+                                     species_obs = taxa_rec,
+                                     region = TRUE)
+        raw_metrics <- rbind(raw_metrics, speciesMetric)
+      }
+    }
+  }
+  group_name <- regmatches(basename(data_file),
+                           regexpr('[A-z]+(?=_)',basename(data_file),perl=TRUE))
+  write.csv(raw_metrics,
+            file = file.path('./Region/RegMetrics',
+                             paste0('regMetrics_',
+                                    gsub('.rdata$', '.csv',basename(data_file)))),
+            row.names = FALSE)
+}
+
+td <- data.frame()
+file_list <- list.files(file.path('./Region/RegMetrics'),
+                        full.names = TRUE)
+for(i in file_list){
+  td <- rbind(td,read.csv(i))
+}
+write.csv(x = td, file.path('./Region/RegMetrics/ALL_regMetrics.csv'))
+```
+
+Now the data has been extracted, we can read in the region data file and query the data by region.  The available regions are shown in Table 2.  
+
 
 ```{r regionmetrics}
 # Read in the regional raw metrics
 RM_reg <-
   read.csv(file =  file.path('Region/RegMetrics/ALL_regMetrics.csv'))
-# Display the list of regions
+# Load the list of regions
 region_lookup <- read.csv(file = file.path('Region/NUTS_lookup.csv'))
-kable(region_lookup, caption = 'List of regions')
-
 # Merge this lookup table with the raw data to allow it be queried by code
 RM_reg <- merge(RM_reg,region_lookup)
-
 # Calculate which datasets are likely to produce good or bad models
 RM_reg <- calc_bad(RM_reg)
 
+```
+
+```{r regiontable}
+kable(region_lookup, caption = 'List of regions')
+```
+
+\pagebreak
+```{r plot_scotland,fig.cap='Proportion of species which can be modelled in Scotland'}
 # Plot up a sample graph for Scotland
-num_spec(RM_reg,reg='Scotland',prop=TRUE) %>% stack_taxa(prefix='Scotland')
+num_spec(RM_reg,region='Scotland',proportional=TRUE) %>% stack_taxa(prefix='Scotland')
+```
+
+
+\pagebreak
+```{r plot_wales,fig.cap='Proportion of species which can be modelled in Wales'}
 # And for Wales
-num_spec(RM_reg,reg='UKL',prop=TRUE) %>% stack_taxa(prefix='Wales')
+num_spec(RM_reg,region='UKL',proportional=TRUE) %>% stack_taxa(prefix='Wales')
+```
+
+
+\pagebreak
+
+## Conclusions
+
+Previously it was difficult to predict from a dataset whether it was possible to produce an occupancy model with a useful level of precision.  This work has demonstrated that the criteria for making such an assessment are relatively simple and easy to apply to new datasets.
+
+With this tool, it can be estimated how many species we can model, not just in the UK as a whole, but for any region or habitat of interest within the UK.  The aspirational criteria also represent a target to aim for, to enable the modelling of any species of interest.
