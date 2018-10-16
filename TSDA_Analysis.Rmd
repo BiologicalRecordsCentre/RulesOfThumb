@@ -365,7 +365,7 @@ write.csv(master, file = 'Results/metrics/ALL_posteriorLM.csv',
 
 ### Raw data files
 
-There are some additional stats we can get from the raw data file. Again, these are for all groups not just CIRRUS/JASMIN runs. Given the memory requirements needed to reformat the plant and moth data I have removed them from this. We can work with them seperately by using the visit data files which are on JASMIN where they will have been created.
+There are some additional stats we can get from the raw data file. Again, these are for all groups not just CIRRUS/JASMIN runs. Given the memory requirements needed to reformat the plant and moth data they have been removed them from this step and will be incorporated after producing the classification trees.
 
 ```{r rawcirrusdatafiles, eval = FALSE}
 dataMetrics <- function(sp, basen, species_obs, hab=NULL, 
@@ -575,7 +575,7 @@ data_files <- list.files(data_files_path,
                          pattern = '.rdata$',
                          full.names = TRUE)
 
-# Dont do the really big ones!
+# Dont do the really big ones.  These will be interpreted later.
 data_files <- data_files[!grepl('Moths', data_files)]
 data_files <- data_files[!grepl('VascPlants', data_files)]
 
@@ -1247,12 +1247,92 @@ If Spnvisits (number of records) is allowed back into the decision tree, the onl
 
 Based on the work above, we can estimate how many species we can model for taxa across the whole of the UK and across multiple habitat and regional areas.
 
-To provide a benchmark, below are two plots for all taxa for all UK data.  The first graphs shows absolute values, while the second shows the proportion of species for each taxonomic group.
+Before doing so, the data for the moth and butterfly records can be extracted and added to the metric output data table.  Just the metrics which came out from the decision trees will be included in this extraction, so it runs much faster than the earlier data extraction.
+
+```{r butterfly_moth, eval=FALSE}
+# Location of the jasmin butterfly and moth data
+jasmin <- file.path('W:/PYWELL_SHARED/Pywell Projects/BRC/Mark Logie/TSDA/Jasmin_data')
+data_files <- list.files(jasmin,full.names = TRUE)
+
+# Function to extract just the P90 and prop_abs metrics
+simpleDataMetrics <- function(sp,tFDall,num_rec,Taxa,habitat=NA,region=NA){
+  tFD <- tFDall[tFDall$CONCEPT==sp,]
+  year_count <- table(tFD$year)
+  P90 <- as.numeric(quantile(year_count,probs = c(.9)))
+  if(is.na(P90)){P90 <- 0}
+  prop_abs <- 1-(nrow(tFD)/num_rec)
+  data.frame(species = sp,
+             habitat = habitat,
+             region = region,
+             P90 = P90,
+             prop_abs = prop_abs,
+             Taxa = Taxa,
+             Taxa_Root = Taxa)
+}
+
+for(data_file in data_files){
+  cat('Starting', basename(data_file))
+  load(data_file)
+
+  spp <- unique(taxa_data$CONCEPT)
+  # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  
+  cat('\n', length(spp), 'species\n')
+  num_rec <- nrow(taxa_data)
+  taxa_data$year <- lubridate::year(taxa_data$TO_STARTDATE)
+  
+  # Remove sites which have not seen a repeat in subsequent years.
+  # This is a requirement here as this was a step taken by the model.
+  yps <- rowSums(acast(taxa_data, SQ_1KM ~ year, length, value.var = 'year') > 0)
+  sites_to_include <- names(yps[yps >= 2])
+  taxa_data <- taxa_data[taxa_data$SQ_1KM %in% sites_to_include,]
+  
+  Taxa <- substr(basename(data_file),1,regexpr('_',basename(data_file))[1]-1)
+  
+  # Calculate metrics for all records
+  raw_metrics <- lapply(spp,
+                        FUN = simpleDataMetrics,
+                        tFDall = taxa_data,
+                        num_rec = num_rec,
+                        Taxa = Taxa)
+  raw_metrics <- do.call(rbind, raw_metrics)
+  write.csv(raw_metrics, file = file.path('Results/metrics',
+                                          paste0('rawMetrics_',
+                                                 gsub('.rdata$', '',
+                                                      basename(data_file)),
+                                                 '.csv')),
+            row.names = FALSE)
+}
+
+# Now add these data to the combined metrics table
+jasminDataFiles <- list.files(path = 'Results/metrics',
+                              pattern = '^jasminMetrics',
+                              full.names = TRUE)
+master <- NULL
+for(i in jasminDataFiles){
+  
+  x <- read.csv(i)
+  master <- rbind(master, x)  
+
+}
+
+# Remove all metrics not required
+RM <- read.csv('Results/metrics/ALL_rawMetrics.csv')
+RM <- RM[,colnames(RM) %in% colnames(master)]
+
+master <- rbind(RM, master)
+
+write.csv(master, file = 'Results/metrics/ALL_combinedRawMetrics.csv',
+          row.names = FALSE)
+```
+
+In order to plot the taxa data, the decision tree needs to be applied to the output metrics, and functions are written to simply plot the graphs when given an input data frame.  The functions for running this data wrangling is below.
 
 ```{r plotnumtaxa}
 
 # Extract raw data metrics, as we want to look at all species, not just those that we had matching posterior data for
-RM <- read.csv('Results/metrics/ALL_rawMetrics.csv') 
+RM <- read.csv('Results/metrics/ALL_combinedRawMetrics.csv') 
 # Remove all last 10 yr data
 RM$Taxa <- as.character(RM$Taxa)
 RM <- RM[RM$Taxa==as.character(RM$Taxa_Root),]
@@ -1268,7 +1348,7 @@ calc_bad <- function(df){
   if(!is.null(df$habitat)){
     df$habitat <- as.character(df$habitat)
   }
-  if(!is.null(df$ragion)){
+  if(!is.null(df$region)){
     df$region <- as.character(df$region)
   }
   if(!is.null(df$code)){
@@ -1378,8 +1458,12 @@ stack_taxa <- function(df,prefix=NULL){
 
 RM <- calc_bad(RM)
 ```
+
+
+\pagebreak
+To provide a benchmark, below are two plots for all taxa for all UK data.  The first graphs shows absolute values, while the second shows the proportion of species for each taxonomic group.
+
 ```{r RM_basic,fig.cap='Plot of number of species which can be modelled, split by taxonomic group.  Blue shows species which can be modelled, red those which cannot.  Grey are those for which there is no data, due to there being no records which meet the requirement of coming from sites with repeat visits in any subsequent years.'}
-# Plot the basic graph
 num_spec(RM) %>% stack_taxa()
 ```
 
@@ -1431,27 +1515,18 @@ UK_land_GR$site <- gr_num2let(easting = UK_land_GR$easting,
 UK_land_GR$site <- paste0(substr(x = UK_land_GR$site, start = 1, stop = 4),
                           substr(x = UK_land_GR$site, start = 8, stop = 9))
 
-##coverage is in km squared
+## Coverage is in km squared
 total_coverage <- colSums(UK_land[,3:ncol(UK_land)])
 
-##now also want number of kmsq with any cover of each habitat
-UK_land_any_hab <- ifelse(UK_land[,3:ncol(UK_land)]>0, 1, 0)
+## We also want number of kmsq with any cover of each habitat
+UK_land_any_hab <- ifelse(UK_land[,3:ncol(UK_land)] > 0, 1, 0)
 total_coverage_squares <- colSums(UK_land_any_hab)
 
-##now look at coverage for each of quantiles
+## Now look at coverage for each of quantiles
 quants <-
   data.frame(apply(UK_land[,3:ncol(UK_land)], 2, function(x){
     quantile(x[x>0], probs = c(0.25, 0.50, 0.75))
   }))
-
-for(i in 1:length(quants)){
-  for(j in 1:3){
-    ##subset data in quant to quantile ranges (25%, 50%, 75%)
-    sub_UK <- subset(UK_land, UK_land[,names(quants)[i]] > quants[j ,i])
-    sub_UK_any_hab <- ifelse(sub_UK[,3:ncol(sub_UK)] > 0, 1, 0)
-    quants_sums[j,i] <- sum(sub_UK_any_hab[,names(quants)[i]])
-  }
-}
 ```
 
 
@@ -1527,7 +1602,7 @@ for(data_file in data_files){
 
 td <- data.frame()
 file_list <- list.files(file.path('./Habitat/HabMetrics'),
-                        patter = '.csv$',
+                        pattern = '^habMetrics.*csv$',
                         full.names = TRUE)
 
 for(i in file_list){
@@ -1538,12 +1613,94 @@ for(i in file_list){
 write.csv(x = td, file.path('./Habitat/HabMetrics/ALL_habMetrics.csv'))
 ```
 
+Now calculate the metrics for butterflies in moths.  These are formatted differently and only the basic metrics are extracted, to save computational power.
+
+```{r butterfly_hab,eval=FALSE}
+for(data_file in list.files(jasmin,full.names = TRUE)){
+  cat('Starting', basename(data_file))
+  load(data_file)
+
+  spp <- unique(taxa_data$CONCEPT)
+  # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  
+  cat('\n', length(spp), 'species\n')
+  num_rec <- nrow(taxa_data)
+  taxa_data$year <- lubridate::year(taxa_data$TO_STARTDATE)
+  
+  # Remove sites which have not seen a repeat in subsequent years.
+  # This is a requirement here as this was a step taken by the model.
+  yps <- rowSums(acast(taxa_data, SQ_1KM ~ year, length, value.var = 'year') > 0)
+  sites_to_include <- names(yps[yps >= 2])
+  taxa_data <- taxa_data[taxa_data$SQ_1KM %in% sites_to_include,]
+  
+  Taxa <- substr(basename(data_file),1,regexpr('_',basename(data_file))[1]-1)
+  # First create a habitat lookup table and use it to generate species observances
+  # by habitat
+  hab_names <- colnames(UK_land[,3:ncol(UK_land)])
+  hab_lookup <- data.frame(site = UK_land_GR$site,
+                           stringsAsFactors = FALSE)
+  species_obs <- list()
+  for(hab in hab_names){
+    cat('..',hab,'...\n')
+    above_av <-
+      UK_land_GR[,names(UK_land_GR) == hab]>=
+      quants[rownames(quants) == '50%',colnames(quants) == hab]
+    hab_lookup[,match(hab, hab_names) + 1] <- above_av
+    names(hab_lookup)[match(hab, hab_names) + 1] <- hab
+    species_obs[[match(hab, hab_names)]] <-
+      taxa_data[taxa_data$SQ_1KM %in% hab_lookup$site[names(hab_lookup) == hab],]
+  }
+  names(species_obs) <- hab_names
+
+  # Calculate metrics by species, by habitat
+  hab_metrics <- NULL
+  i <- 0
+  for(sp in spp){
+    if((i %% 5) == 0){cat('  Habitat: Species',i,'of',length(spp),'\n')}
+    for(hab in hab_names){
+      num_rec <- nrow(species_obs[[match(hab, hab_names)]])
+      hab_metrics <- rbind(hab_metrics,
+                           simpleDataMetrics(sp = sp,
+                                             tFDall =
+                                               species_obs[[match(hab, hab_names)]],
+                                             num_rec = num_rec,
+                                             Taxa = Taxa,
+                                             habitat = hab))
+    }
+    i <- i + 1
+  }
+  
+  write.csv(hab_metrics, file = file.path('Habitat/HabMetrics',
+                                          paste0('jasminHabMetrics_',
+                                                 gsub('.rdata$', '',
+                                                      basename(data_file)),
+                                                 '.csv')),
+            row.names = FALSE)
+}
+
+file_list <- list.files(file.path('./Habitat/HabMetrics'),
+                        pattern = '^jasminHabMetrics.*csv$',
+                        full.names = TRUE)
+master <- NULL
+for(i in c(file_list)){
+  tmp <- read.csv(i)
+  master <- rbind(master,tmp)
+}
+habRM <- read.csv('./Habitat/HabMetrics/ALL_habMetrics.csv')
+# Remove all metrics not required
+habRM <- habRM[,colnames(habRM) %in% colnames(master)]
+td <- rbind(habRM,master)
+
+write.csv(x = td, file.path('./Habitat/HabMetrics/ALL_combinedHabMetrics.csv'))
+```
+
 The raw metrics for each habitat have now been calculated from the raw data.  Using these data, the proportion of species which can be modelled for each habitat can be assessed.
 
 ```{r habmetrics}
 # Read in the habitat raw metrics
 RM_hab <-
-  read.csv(file = file.path('Habitat/HabMetrics/ALL_habMetrics.csv'))
+  read.csv(file = file.path('Habitat/HabMetrics/ALL_combinedHabMetrics.csv'))
 ```
 ```{r calculate_habitats}
 # Calculate which datasets are likely to produce good or bad models
@@ -1628,13 +1785,96 @@ for(i in file_list){
 write.csv(x = td, file.path('./Region/RegMetrics/ALL_regMetrics.csv'))
 ```
 
+Now include the butterfly and moth data
+
+```{r butterfly_reg,eval=FALSE}
+for(data_file in list.files(jasmin,full.names = TRUE)){
+  cat('Starting', basename(data_file))
+  load(data_file)
+
+  spp <- unique(taxa_data$CONCEPT)
+  # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  
+  cat('\n', length(spp), 'species\n')
+  num_rec <- nrow(taxa_data)
+  taxa_data$year <- lubridate::year(taxa_data$TO_STARTDATE)
+  
+  # Remove sites which have not seen a repeat in subsequent years.
+  # This is a requirement here as this was a step taken by the model.
+  yps <- rowSums(acast(taxa_data, SQ_1KM ~ year, length, value.var = 'year') > 0)
+  sites_to_include <- names(yps[yps >= 2])
+  taxa_data <- taxa_data[taxa_data$SQ_1KM %in% sites_to_include,]
+  
+  Taxa <- substr(basename(data_file),1,regexpr('_',basename(data_file))[1]-1)
+  
+  # Load up the regional lookup table
+  regions <- read.csv(file.path('./Region/NUTS1_1km_dupsorted.csv'))
+  regions <- regions[,c(2,4)]
+  region_names <- unique(regions$nutsname)
+  
+  # Create a list of species observances by region
+  species_obs <- list()
+  for(region in region_names){
+    cat('..',region,'...\n')
+    species_obs[[match(region, region_names)]] <-
+      taxa_data[taxa_data$SQ_1KM %in% regions$km_sq[regions$nutsname == region],]
+  }
+  names(species_obs) <- region_names
+
+  # Now calculate metrics by species, by region
+  reg_metrics <- NULL
+  i <- 0
+  for(sp in spp){
+    if((i %% 5) == 0){cat('  Region: Species',i,'of',length(spp),'\n')}
+    for(region in region_names){
+      num_rec <- nrow(species_obs[[match(region, region_names)]])
+      if(num_rec != 0){
+        reg_metrics <- rbind(reg_metrics,
+                             simpleDataMetrics(sp = sp,
+                                               tFDall =
+                                                 species_obs[[match(region,
+                                                                  region_names)]],
+                                               num_rec = num_rec,
+                                               Taxa = Taxa,
+                                               region = region))
+      }
+    }
+    i <- i + 1
+  }
+  write.csv(reg_metrics, file = file.path('Region/RegMetrics',
+                                          paste0('jasminRegMetrics_',
+                                                 gsub('.rdata$', '',
+                                                      basename(data_file)),
+                                                 '.csv')),
+            row.names = FALSE)
+}
+
+file_list <- list.files(file.path('./Region/RegMetrics'),
+                        pattern = '^jasminRegMetrics.*csv$',
+                        full.names = TRUE)
+master <- NULL
+for(i in c(file_list)){
+  tmp <- read.csv(i)
+  master <- rbind(master,tmp)
+}
+regRM <- read.csv('./Region/RegMetrics/ALL_regMetrics.csv')
+# Remove all metrics not required
+regRM <- regRM[,colnames(regRM) %in% colnames(master)]
+td <- rbind(regRM,master)
+
+write.csv(x = td, file.path('./Region/RegMetrics/ALL_combinedRegMetrics.csv'))
+```
+
+
+\pagebreak
 Now the data has been extracted, we can read in the region data file and query the data by region.  The available regions are shown in Table 2.  
 
 
 ```{r regionmetrics}
 # Read in the regional raw metrics
 RM_reg <-
-  read.csv(file =  file.path('Region/RegMetrics/ALL_regMetrics.csv'))
+  read.csv(file =  file.path('Region/RegMetrics/ALL_combinedRegMetrics.csv'))
 # Load the list of regions
 region_lookup <- read.csv(file = file.path('Region/NUTS_lookup.csv'))
 # Merge this lookup table with the raw data to allow it be queried by code
@@ -1669,3 +1909,4 @@ num_spec(RM_reg,region='UKL',proportional=TRUE) %>% stack_taxa(prefix='Wales')
 Previously it was difficult to predict from a dataset whether it was possible to produce an occupancy model with a useful level of precision.  This work has demonstrated that the criteria for making such an assessment are relatively simple and easy to apply to new datasets.
 
 With this tool, it can be estimated how many species we can model, not just in the UK as a whole, but for any region or habitat of interest within the UK.  The aspirational criteria also represent a target to aim for, to enable the modelling of any species of interest.
+
