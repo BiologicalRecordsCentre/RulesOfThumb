@@ -6,6 +6,16 @@ calc_bad <- function(df){
   df$data_good <- df$data_aspire <- rep('bad',length(df$species))
   df$data_good[(df$Node1)&(df$Node2|df$Node3)] <- 'good'
   df$data_aspire[df$Node2] <- 'good'
+  if(!is.null(df$habitat)){
+    df$habitat <- as.character(df$habitat)
+  }
+  if(!is.null(df$region)){
+    df$region <- as.character(df$region)
+  }
+  if(!is.null(df$code)){
+    df$code <- as.character(df$code)
+  }
+  return(df)
   df
 }
 
@@ -24,10 +34,10 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
     df <- df[df$Spnvisits!=0,]
   }
   for(taxa in sort(unique(df$Taxa))){
-    numrec <- length(unique(df$species[df$Taxa==taxa]))
+    num_spec <- length(unique(df$species[df$Taxa==taxa]))
     taxa_num <- rbind(taxa_num,
                       data.frame(taxa = taxa,
-                                 numrec = numrec))
+                                 num_spec = num_spec))
   }
   
   if(!is.null(hab)){
@@ -58,18 +68,18 @@ num_spec <- function(df,hab=NULL,reg=NULL,prop=FALSE,melt=TRUE,
   }
   
   taxa_count <- merge(taxa_count,taxa_num)
-  taxa_count$no_data <- taxa_count$numrec - taxa_count$bad - taxa_count$good
+  taxa_count$no_data <- taxa_count$num_spec - taxa_count$bad - taxa_count$good
   
   # Convert data table for turning into graphs
-  taxa_melt <- melt(taxa_count, id=c('numrec','taxa'))
+  taxa_melt <- melt(taxa_count, id=c('num_spec','taxa'))
   taxa_prop <- taxa_count
-  taxa_prop$bad <- taxa_prop$bad/taxa_prop$numrec
-  taxa_prop$good <- taxa_prop$good/taxa_prop$numrec
-  taxa_prop$no_data <- taxa_prop$no_data/taxa_prop$numrec
-  taxa_prop$no_data[taxa_prop$numrec==0] <- 1
-  taxa_prop$bad[taxa_prop$numrec==0] <- 0
-  taxa_prop$good[taxa_prop$numrec==0] <- 0
-  taxa_prop_melt <- melt(taxa_prop, id=c('numrec','taxa'))
+  taxa_prop$bad <- taxa_prop$bad/taxa_prop$num_spec
+  taxa_prop$good <- taxa_prop$good/taxa_prop$num_spec
+  taxa_prop$no_data <- taxa_prop$no_data/taxa_prop$num_spec
+  taxa_prop$no_data[taxa_prop$num_spec==0] <- 1
+  taxa_prop$bad[taxa_prop$num_spec==0] <- 0
+  taxa_prop$good[taxa_prop$num_spec==0] <- 0
+  taxa_prop_melt <- melt(taxa_prop, id=c('num_spec','taxa'))
   if(prop){
     taxa_melt <- taxa_prop_melt
   }
@@ -98,11 +108,17 @@ stack_taxa <- function(df,prefix=NULL){
   } else {
     title <- paste(ylabel,'which can be modelled')
   }
+  stack_records(df,colours,ylabel,title)
+}
+
+stack_records <- function(df,colours,ylabel,title){
   ggplot(data=df,
          aes(fill=variable,y=value,x=taxa)) +
     geom_bar(stat='identity',alpha = .5) +
     theme(axis.text.x = element_text(angle=90, hjust=1, vjust = 0.3)) +
     labs(fill = 'Data',x='Taxonomic Group',y=ylabel) +
     scale_fill_manual(values = colours) +
-    ggtitle(title)
+    ggtitle(title) +
+    scale_x_discrete(limits = rev(levels(df$taxa))) +
+    coord_flip()
 }
