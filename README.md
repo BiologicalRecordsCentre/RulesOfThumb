@@ -6,7 +6,7 @@ A good starting point is the rmarkdown results: ```TSDA_Analysis.pdf```.  This e
 
 ## Viewing all data and querying by region or habitat
 
-If you want to play with the habitat and regional results, and query by whichever region or habitat you wish, check out the file results_calculator.R.  For this to run, you'll need to download the function script ./Results/plotting_function.R and all the data files in ```./Results/metrics```, ```./Habitat``` and ```./Regional```.
+If you want to play with the habitat and regional results, and query by whichever region or habitat you wish, check out the file ```results_calculator.R```.  For this to run, you'll need to download the function script ```./Results/plotting_function.R``` and all the data files in ```./Results/metrics```, ```./Habitat``` and ```./Regional```.
 
 ## Using your own dataset
 
