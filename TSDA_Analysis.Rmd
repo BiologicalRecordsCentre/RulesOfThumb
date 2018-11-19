@@ -1261,11 +1261,13 @@ simpleDataMetrics <- function(sp,tFDall,num_rec,Taxa,habitat=NA,region=NA){
   P90 <- as.numeric(quantile(year_count,probs = c(.9)))
   if(is.na(P90)){P90 <- 0}
   prop_abs <- 1-(nrow(tFD)/num_rec)
+  Spnvisits <- nrow(tFD)
   data.frame(species = sp,
              habitat = habitat,
              region = region,
              P90 = P90,
              prop_abs = prop_abs,
+             Spnvisits = Spnvisits,
              Taxa = Taxa,
              Taxa_Root = Taxa)
 }
@@ -1298,7 +1300,7 @@ for(data_file in data_files){
                         Taxa = Taxa)
   raw_metrics <- do.call(rbind, raw_metrics)
   write.csv(raw_metrics, file = file.path('Results/metrics',
-                                          paste0('rawMetrics_',
+                                          paste0('jasminMetrics_',
                                                  gsub('.rdata$', '',
                                                       basename(data_file)),
                                                  '.csv')),
@@ -1320,6 +1322,7 @@ for(i in jasminDataFiles){
 # Remove all metrics not required
 RM <- read.csv('Results/metrics/ALL_rawMetrics.csv')
 RM <- RM[,colnames(RM) %in% colnames(master)]
+master <- master[,colnames(master) %in% colnames(RM)]
 
 master <- rbind(RM, master)
 
@@ -1909,4 +1912,3 @@ num_spec(RM_reg,region='UKL',proportional=TRUE) %>% stack_taxa(prefix='Wales')
 Previously it was difficult to predict from a dataset whether it was possible to produce an occupancy model with a useful level of precision.  This work has demonstrated that the criteria for making such an assessment are relatively simple and easy to apply to new datasets.
 
 With this tool, it can be estimated how many species we can model, not just in the UK as a whole, but for any region or habitat of interest within the UK.  The aspirational criteria also represent a target to aim for, to enable the modelling of any species of interest.
-
