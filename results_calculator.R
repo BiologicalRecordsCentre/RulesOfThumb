@@ -8,7 +8,6 @@ library('reshape2')
 library('ggplot2')
 library('tidyr')
 source('./Results/plotting_function.R')
-
 ###############################################################################
 ###                                                                         ###
 ###   ALL DATA                                                              ###
@@ -34,11 +33,12 @@ source('./Results/plotting_function.R')
 ###     TSDA_Analysis.pdf                                                   ###
 ###                                                                         ###
 ###############################################################################
-RM <- read.csv('Results/metrics/ALL_rawMetrics.csv') 
+RM <- read.csv('Results/metrics/ALL_combinedRawMetrics.csv') 
 # Remove all last 10 yr data
 RM$Taxa <- as.character(RM$Taxa)
 if(length(RM$Taxa_Root)!=0){RM <- RM[RM$Taxa==as.character(RM$Taxa_Root),]}
 RM <- calc_bad(RM)
+RM_df <- num_spec(RM,melt=FALSE)
 
 # Plot the graphs
 num_spec(RM) %>% stack_taxa()
@@ -60,7 +60,7 @@ num_spec(RM,aspire=TRUE,prop=TRUE) %>%
 ###                                                                         ###
 ###############################################################################
 RM_hab <-
-  read.csv(file = file.path('Habitat/HabMetrics/ALL_habMetrics.csv'))
+  read.csv(file = file.path('Habitat/HabMetrics/ALL_combinedHabMetrics.csv'))
 # Load list of possible habitats
 hab_list <- read.csv('Habitat/Habitat_List.csv')
 RM_hab <- calc_bad(RM_hab)
@@ -70,15 +70,16 @@ RM_hab$habitat <- as.character(RM_hab$habitat)
 hab_df <- NULL
 for(hab in hab_list$Habitat_code){
   hab_spec <- num_spec(df=RM_hab,hab=hab,melt=FALSE)
-  hab_spec$numrec <- hab
-  names(hab_spec)[2] <- 'habitat'
+  hab_spec$habitat <- hab
   hab_df <- rbind(hab_df,hab_spec)
 }
+hab_df <- rbind(hab_df,
+                data.frame(RM_df,habitat = 'national'))
 
 # Plot up a sample graph for broad leaf woodland
 num_spec(RM_hab,hab='BLW') %>% stack_taxa(prefix='Broad-leaf Woodland')
 num_spec(RM_hab,hab='BLW',prop=TRUE) %>%
-  stack_taxa(prefix='Broad-leaf Woodland')
+  stack_taxa(prefix='B-L Woodland')
 # And for coastal
 num_spec(RM_hab,hab='C') %>% stack_taxa(prefix='Coastal')
 num_spec(RM_hab,hab='C',prop=TRUE) %>% stack_taxa(prefix='Coastal')
@@ -94,19 +95,20 @@ num_spec(RM_hab,hab='C',prop=TRUE) %>% stack_taxa(prefix='Coastal')
 ###                                                                         ###
 ###############################################################################
 RM_reg <-
-  read.csv(file =  file.path('Region/RegMetrics/ALL_regMetrics.csv'))
+  read.csv(file =  file.path('Region/RegMetrics/ALL_combinedRegMetrics.csv'))
 region_lookup <- read.csv(file = file.path('Region/NUTS_lookup.csv'))
 RM_reg <- merge(RM_reg,region_lookup)
 RM_reg <- calc_bad(RM_reg)
 
-# Produce a table for all habitats in the UK
+# Produce a table for all regions in the UK
 reg_df <- NULL
 for(reg in region_lookup$code){
   reg_spec <- num_spec(df=RM_reg,reg=reg,melt=FALSE)
-  reg_spec$numrec <- reg
-  names(reg_spec)[2] <- 'region'
+  reg_spec$region <- reg
   reg_df <- rbind(reg_df,reg_spec)
 }
+reg_df <- rbind(reg_df,
+                data.frame(RM_df,region = 'national'))
 
 # Plot graphs (possible regions are in region_lookup)
 # Plot up a sample graph for Scotland
