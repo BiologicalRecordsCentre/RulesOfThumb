@@ -25,6 +25,7 @@ library('rmarkdown')
 library('sparta')
 library('reshape2')
 library('rpart')
+library('rpart.plot')
 library('RcppEigen')
 library('psych')
 library('kableExtra')
@@ -800,6 +801,8 @@ fsdf$good[fsdf$score>=2] <- 'good'
 fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate,
                   method = 'class',
                   data = fsdf)
+
+rpart.plot(fit_fsdf)
 ```
 
 
@@ -810,6 +813,11 @@ plot(fit_fsdf, uniform=TRUE,
 text(fit_fsdf, use.n = TRUE,
      all = TRUE,
      cex = .7)
+
+rpart.plot(fit_fsdf, extra = 101, type = 4)
+prp(fit_fsdf)
+prp(fit_fsdf, type = 4, extra = 101, leaf.round = 0, fallen.leaves = TRUE, 
+    varlen = 0, tweak = 1.2)
 ```
 
 
