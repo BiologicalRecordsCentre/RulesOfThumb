@@ -815,9 +815,6 @@ text(fit_fsdf, use.n = TRUE,
      cex = .7)
 
 rpart.plot(fit_fsdf, extra = 101, type = 4)
-prp(fit_fsdf)
-prp(fit_fsdf, type = 4, extra = 101, leaf.round = 0, fallen.leaves = TRUE, 
-    varlen = 0, tweak = 1.2)
 ```
 
 
@@ -829,14 +826,40 @@ fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate + PropYrCon
 
 
 ```{r plot_tree_convergence,fig.cap="Decision tree for deciding which models are good or bad based on precision and convergence"}
-plot(fit_fsdf, uniform=TRUE, 
-     main = "Which models are good or bad (precision and convergence)?",
-     margin = .1)
-text(fit_fsdf, use.n = TRUE,
-     all = TRUE,
-     cex = .7)
-```
+#plot(fit_fsdf, uniform=TRUE, 
+#     main = "Which models are good or bad (precision and convergence)?",
+#     margin = .1)
+#text(fit_fsdf, use.n = TRUE,
+#     all = TRUE,
+#     cex = .7)
+rpart.plot(fit_fsdf, extra = 101, type = 4)
 
+```
+```{r plot_consultation_decisiontree,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, including the results of the decision tree.  Light grey points in the background show all models which were not part of the consultation"}
+ggplot() +
+  geom_point(data=trendsData[trendsData$mean_year_precision>6&
+                               trendsData$mean_year_precision<1000000,],
+             aes(x=PropYrConverged,
+                 y=mean_year_precision),
+             color='#DFDFDF',
+             size=.5) +
+  geom_point(data=fsdf,
+             aes(x=PropYrConverged,
+                 y=mean_year_precision,
+                 color=as.factor(score)),
+                  size = 2) +
+  scale_x_continuous(limits=c(0,1)) +
+  scale_y_log10(limits=c(6,1000000),labels = scales::comma) +
+  theme_light() +
+  scale_color_manual(values=c('#ca0020','#f4a582',"#92c5de", "#0571b0"),
+                     name='Model score') +
+  labs(title='What determines a "bad" model?') +
+  xlab("Proportion of Years which Converged") + ylab("Mean Year Precision") +
+  geom_segment(aes(x=0.34, y = 149, xend = 0, yend = 149), color = 'red') +
+  geom_segment(aes(x=0.34, y = 60, xend = 1, yend = 60), color = 'red') +
+  geom_segment(aes(x=0.34, y = 60, xend = 0.34, yend = 149), color = 'red') +
+  geom_segment(aes(x=0, y = 87, xend = 1, yend = 87), color = 'red', linetype = 2) 
+```
 
 \pagebreak
 The success of the decision tree for classifying bad models is:
