@@ -969,6 +969,31 @@ for(taxa in sort(unique(RM$Taxa))){
 
 taxa_melt <- melt(df, id=c('taxa'))
 ```
+
+```{r }
+df2 <- NULL
+
+for(taxa in sort(unique(RM$Taxa))){
+  num_inc <- sum(RM$Spnvisits[RM$Taxa==taxa])
+  num_exc <- sum(RM$numrec_removed[RM$Taxa==taxa])
+  df2 <- rbind(df2,
+              data.frame(taxa = taxa,
+                         RecordsIncluded = num_inc, 
+                         RecordsExcluded = num_exc,
+                         TotalRecords = num_inc + num_exc))
+}
+
+ggplot(data = df2, aes(TotalRecords)) + geom_histogram(binwidth = 2.5e4)
+```
+
+```{r}
+ggplot(data = df2) + 
+  geom_point(aes(x = TotalRecords, y = RecordsIncluded/TotalRecords), colour = 'blue') + 
+  ggtitle("Relationship of  proportion of records included to number of records") +
+  theme_bw()
+
+```
+
 ```{r stack_fn, echo=FALSE}
 # Plot the results
 stack_records <- function(df,colours,ylabel,title){
@@ -989,6 +1014,7 @@ stack_records(taxa_melt, colours = c('red', '#9999FF'),
               title = 'Proportion of records which are included')
 ```
 
+Overall, we found that `{r round( mean(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)}` of all records were removed, varying from `{r round( min(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)}` to `{r round( max(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)}` across projects
 
 \pagebreak
 
