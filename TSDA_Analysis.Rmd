@@ -697,8 +697,14 @@ head(trendsData)
 str(trendsData)
 ```
 
-```{r add_time_length}
-trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr"
+There are some species with no data in this dataset - although strangely they do have trends. We will remove these species.
+
+```{r add_time_length_and_remove_spp_with_no_data}
+trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr")
+
+sum(trendsData$P90==0)
+
+trendsData <- trendsData[trendsData$P90>0,]
 ```
 
 \pagebreak
@@ -807,7 +813,7 @@ fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate,
                   method = 'class',
                   data = fsdf)
 
-rpart.plot(fit_fsdf)
+rpart.plot(fit_fsdf, extra = 108, type = 3, clip.right.labs = FALSE)
 ```
 
 
@@ -819,7 +825,7 @@ text(fit_fsdf, use.n = TRUE,
      all = TRUE,
      cex = .7)
 
-rpart.plot(fit_fsdf, extra = 101, type = 4)
+rpart.plot(fit_fsdf, extra = 108, type = 3, clip.right.labs = FALSE)
 ```
 
 
@@ -837,7 +843,7 @@ fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate + PropYrCon
 #text(fit_fsdf, use.n = TRUE,
 #     all = TRUE,
 #     cex = .7)
-rpart.plot(fit_fsdf, extra = 101, type = 4)
+rpart.plot(fit_fsdf, extra = 108, type = 4, clip.right.labs = FALSE)
 
 ```
 ```{r plot_consultation_decisiontree,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, including the results of the decision tree.  Light grey points in the background show all models which were not part of the consultation"}
@@ -1103,7 +1109,7 @@ pfit <- prune(fit, cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
 #  	main="Pruned 'Rules of thumb' for species occupancy modelling",
 #  	margin = .1)
 #text(pfit, use.n = TRUE, all = TRUE, cex = .7)
-rpart.plot(pfit, extra = 108, under = F, type = 3, clip.right.labs = FALSE, branch=0.7)
+rpart.plot(pfit, extra = 108, under = F, type = 4, clip.right.labs = FALSE, branch=0.7)
 ```
 
 A graphic way of considering this is in the following graph:
