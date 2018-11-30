@@ -696,6 +696,11 @@ trendsData <- merge(x = MM, y = trendsData,
 head(trendsData)
 str(trendsData)
 ```
+
+```{r add_time_length}
+trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr"
+```
+
 \pagebreak
 
 ### Consultation on model outputs
