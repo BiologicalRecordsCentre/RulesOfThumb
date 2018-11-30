@@ -929,6 +929,14 @@ td_sub <- trendsData[,c('P90','visits_P90','prop_of_years',
 pairs.panels(td_sub, hist.col = 'blue',smooth = TRUE)
 ```
 
+```{r pairspanels.with.logs,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest"}
+td_sub2 <- log10(trendsData[,c('Spnvisits','P90','visits_P90')]+1)
+td_sub2 <- cbind (td_sub2, trendsData[,c('prop_of_years',
+                           'prop_repeats_grp','prop_list_one',
+                           'prop_abs')] )
+
+pairs.panels(td_sub2, hist.col = 'blue',smooth = TRUE)
+```
 
 \pagebreak
 
@@ -1085,12 +1093,45 @@ text(fit, use.n = TRUE,
 pfit <- prune(fit, cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
 
 # plot the pruned tree 
-plot(pfit, uniform=TRUE, 
-  	main="Pruned 'Rules of thumb' for species occupancy modelling",
-  	margin = .1)
-text(pfit, use.n = TRUE, all = TRUE, cex = .7)
+
+#plot(pfit, uniform=TRUE, 
+#  	main="Pruned 'Rules of thumb' for species occupancy modelling",
+#  	margin = .1)
+#text(pfit, use.n = TRUE, all = TRUE, cex = .7)
+rpart.plot(pfit, extra = 108, under = F, type = 3, clip.right.labs = FALSE, branch=0.7)
 ```
 
+A graphic way of considering this is in the following graph:
+
+```{r plot_decision_tree_by_bad, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group"}
+
+ggplot(data = trendsData, aes(x = logit(prop_abs), y = log10(P90), 
+             col = as.factor(bad))) +
+  geom_point() +
+  scale_color_manual(values=c("#0571b035", '#ca002035'),
+                     name='Trend output') + 
+  facet_wrap(~Taxa_Root)  +
+  geom_segment(aes(x=logit(0.2), y = log10(8.7), xend = logit(0.99), yend = log10(8.7)), color = 'black') +
+  geom_segment(aes(x=logit(0.99), y = log10(8.7), xend = logit(0.99), yend = log10(3.4)), color = 'black') +  
+  geom_segment(aes(x=logit(0.99), y = log10(3.4), xend = logit(0.99999), yend = log10(3.4)), color = 'black') +
+  theme_bw()
+
+```
+
+```{r plot_decision_tree_by_taxon, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group"}
+
+ggplot(data = trendsData, aes(x = logit(prop_abs), y = log10(P90), 
+             col = as.factor(bad))) +
+  geom_point() +
+  scale_color_manual(values=c("#0571b035", '#ca002035'),
+                     name='Trend output') + 
+  facet_wrap(~Taxa)  +
+  geom_segment(aes(x=logit(0.2), y = log10(8.7), xend = logit(0.99), yend = log10(8.7)), color = 'black') +
+  geom_segment(aes(x=logit(0.99), y = log10(8.7), xend = logit(0.99), yend = log10(3.4)), color = 'black') +  
+  geom_segment(aes(x=logit(0.99), y = log10(3.4), xend = logit(0.99999), yend = log10(3.4)), color = 'black') +
+  theme_bw()
+
+```
 
 \pagebreak
 The decision tree with equal weighting to good and bad results shows a recall (chance of correct prediction) of 82% for good models and 85% for bad models, when the good/bad classifications are equally weighted.  The precision (chance of classification being correct) for good models is 89% and 78% for bad models.
@@ -1193,10 +1234,12 @@ pfit_good <- prune(fit_good,
                    cp = fit_good$cptable[which.min(fit_good$cptable[,"xerror"]),"CP"])
 
 # plot the pruned tree 
-plot(pfit_good, uniform=TRUE, 
-  	main="'Rules of thumb' for species occupancy modelling, 10:1 good:bad",
-  	margin = .1)
-text(pfit_good, use.n = TRUE, all = TRUE, cex = .7)
+
+#plot(pfit_good, uniform=TRUE, 
+#  	main="'Rules of thumb' for species occupancy modelling, 10:1 good:bad",
+#  	margin = .1)
+#text(pfit_good, use.n = TRUE, all = TRUE, cex = .7)
+rpart.plot(pfit_good, extra = 108, under = F, type = 3, clip.right.labs = FALSE, branch=0.7)
 ```
 
 
@@ -1273,10 +1316,12 @@ pfit_bad <- prune(fit_bad,
                                        "CP"])
 
 # plot the pruned tree 
-plot(pfit_bad, uniform=TRUE, 
-  	main="'Rules of thumb' for species occupancy modelling, 1:10 good:bad",
-  	margin = .1)
-text(pfit_bad, use.n = TRUE, all = TRUE, cex = .7)
+
+#plot(pfit_bad, uniform=TRUE, 
+#  	main="'Rules of thumb' for species occupancy modelling, 1:10 good:bad",
+#  	margin = .1)
+#text(pfit_bad, use.n = TRUE, all = TRUE, cex = .7)
+rpart.plot(pfit_bad, extra = 108, under = F, type = 3, clip.right.labs = FALSE, branch=0.7)
 ```
 
 
@@ -1951,7 +1996,7 @@ kable(region_lookup, caption = 'List of regions')
 \pagebreak
 ```{r plot_scotland,fig.cap='Proportion of species which can be modelled in Scotland'}
 # Plot up a sample graph for Scotland
-num_spec(RM_reg,region='Scotland',proportional=TRUE) %>% stack_taxa(prefix='Scotland')
+num_spec(RM_reg,region='Scotland',proportional=T) %>% stack_taxa(prefix='Scotland')
 ```
 
 
