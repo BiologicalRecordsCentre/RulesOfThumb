@@ -30,7 +30,7 @@ library('RcppEigen')
 library('psych')
 library('kableExtra')
 library('BRCmap')
-
+library('quantreg')
 
 ```
 
@@ -700,7 +700,7 @@ str(trendsData)
 There are some species with no data in this dataset - although strangely they do have trends. We will remove these species.
 
 ```{r add_time_length_and_remove_spp_with_no_data}
-trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr")
+trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr"
 
 sum(trendsData$P90==0)
 
@@ -1353,6 +1353,61 @@ The decision tree produces a precision and recall for bad models of 96% and 40% 
 The first node alone (is P90>=2.15) gives a precision and recall for bad models of 88% and 63%, and for good models 79% and 94%.  This means that if the data does not meet this threshold, there is a 88% of it producing a poor model.
 
 If Spnvisits (number of records) is allowed back into the decision tree, the only question that needs to be asked is: are there at least 2 records?  This results in a precision and recall for bad models of 97% and 21%, and 67% and 99.5% for good models, a similar classification rate for a much simpler decision tree.
+
+\pagebreak
+
+## A bit more investigation about the parameters in the decision tree
+
+### The relationship between P90 and P50
+
+One of the possible concerns in applying this more widely is that while we found that P90 was an important parameter in the decision tree, it could also be strongly correlated with P50 (i.e. the median number of visits per year). We note that we have good prior reasons for thinking that P90 is useful (because it allows good estimation of detection), but here we test the relationship between the two.
+
+```{r plot.median.v.P90}
+
+mod.M.v.P90 <- lm(log10(td$P90)~log10(td$median))
+
+# re-order the dataset so that the data_good==bad is drawn last
+td <- td[order(td$data_good),]
+
+slope <- function(x = NULL){
+  log10(10*x)
+}
+
+plot <- ggplot(data = td) +
+  geom_point(aes(y = P90, 
+                 x = median+(median*0.04*(data_good=='bad')), 
+                 colour = data_good), alpha = 0.2) +
+  geom_abline(aes(slope = slope(1),  
+                  intercept = 0, 
+                  linetype = '1: 1'), colour = '#000000') +
+  geom_abline(aes(intercept = coef(mod.M.v.P90)[1], 
+                  slope = coef(mod.M.v.P90)[2], 
+                  linetype = 'best fit'), colour = '#000000') +
+  geom_hline(aes(yintercept = 8.65, 
+                 linetype = 'P90 = 8.65'), colour = '#ff0000') +
+  xlab(lab = 'Median') + ylab(lab = 'P90') +
+  scale_x_log10() + scale_y_log10() + 
+  labs(title = 'P90 vs Median, all data') +
+  theme_bw()  +
+  scale_color_manual(name = 'Model prediction', values = c('dark red','dark blue'),
+                     guide = guide_legend(override.aes = 
+                                            list(color = c('dark red',
+                                                           'dark blue')))) +
+  scale_linetype_manual(name = 'lines', values = c(2,1,1), 
+                        guide = guide_legend(override.aes =
+                                             list(color = c('#000000',
+                                                            '#000000',
+                                                            '#ff0000')))) #+
+  #facet_wrap(~Taxa_Root)
+
+plot
+  
+
+```
+
+This shows that there is a linear trend of the P50 against the P90, so although the P90 represents the best years in the dataset [and this is indeed a better predictor of the adequacy of the data than P50] this is broadly related to the median years, so there is not a skew 
+
+\pagebreak
 
 ## How many species can we model?
 
