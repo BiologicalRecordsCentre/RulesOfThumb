@@ -1405,7 +1405,51 @@ plot
 
 ```
 
-This shows that there is a linear trend of the P50 against the P90, so although the P90 represents the best years in the dataset [and this is indeed a better predictor of the adequacy of the data than P50] this is broadly related to the median years, so there is not a skew 
+This shows that there is a linear trend of the P50 against the P90, so although the P90 represents the best years in the dataset [and this is indeed a better predictor of the adequacy of the data than P50] this is broadly related to the median years. Over the range of the bulk of these data (i.e. up to median = 100) the P90 is two to three times greater than the P50 (=median) 
+
+### The relationship between precision and P90
+
+We have used a decision tree to model when the data are minimal adequate. However, does more data automatically mean better trends?
+
+One way to answer this is to model the lower limit of P90 against mean year precision. This can be done using quantile regression
+
+```{r p90_by_precision}
+
+td.p90.8_7 <- subset(td, P90>8.7)
+
+mod.limit.of.precision <- rq(
+      log10(mean_year_precision) ~
+        log10(P90), 
+      tau = 0.05, data = td.p90.8_7)
+
+# predict the points at P90 = 8.7 and max P90
+segment.ys <- 
+  10^(predict(mod.limit.of.precision,
+              newdata = data.frame('P90' = c(8.7,max(td.p90.8_7$P90)))))
+
+plot <- ggplot() +
+  geom_point(aes(x = td$P90,
+                 y = td$mean_year_precision,
+                 colour = td$data_good,
+                 shape = td$model_good),
+             alpha = '0.2') +
+  ylab(lab = 'Mean Year Precision') + xlab(lab = 'P90') +
+  scale_x_log10(labels = scales::comma) + scale_y_log10() + labs(title = 'P90 vs Mean Year Precision, all data') +
+  scale_color_manual(name = 'Model prediction', values = c('dark red','dark blue'),
+                     guide = guide_legend(override.aes = 
+                                            list(color = c('dark red',
+                                                           'dark blue')))) +
+  scale_shape_manual(name = 'Model quality', values = c(4,16),
+                     guide = guide_legend(override.aes = 
+                                            list(shape = c(4,16)))) + 
+  geom_hline(yintercept = 87) +
+  geom_segment(aes(x = 8.7, y = segment.ys[1], 
+               xend = max(td.p90.8_7$P90), yend = segment.ys[2]))
+
+plot
+```
+
+This shows that after the cut-off (of P90 > 8.7), the more data there are (represented here by the increase in P90), the better the precision is bound to be. The line represents the quantile regression through the 5th percentile, so it shows that precision /can/ be high with low P90, but the lowest possible precision is guarenteed to be higher with higher P90, i.e. more data!
 
 \pagebreak
 
