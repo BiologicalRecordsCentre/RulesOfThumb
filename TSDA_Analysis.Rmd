@@ -824,8 +824,6 @@ plot(fit_fsdf, uniform=TRUE,
 text(fit_fsdf, use.n = TRUE,
      all = TRUE,
      cex = .7)
-
-rpart.plot(fit_fsdf, extra = 108, type = 3, clip.right.labs = FALSE)
 ```
 
 
@@ -1033,7 +1031,7 @@ stack_records(taxa_melt, colours = c('red', '#9999FF'),
               title = 'Proportion of records which are included')
 ```
 
-Overall, we found that `{r round( mean(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)}` of all records were removed, varying from `{r round( min(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)}` to `{r round( max(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)}` across projects
+Overall, we found that `r round( mean(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` of all records were removed, varying from `r round( min(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` to `r round( max(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` across projects
 
 \pagebreak
 
