@@ -50,7 +50,7 @@ To develop these rules of thumb we need two sets of metrics.
 The metrics describe the data that we have for a species and can be used to predict the quality of the model:
 
 * The 50th/90th percentile of the number of records of the focal species per year [`median/P90`]
-* The 50th/70th/80th/90th percentile of the number of visits to a site each year, for sites where the species has been observed in that year (i.e. including visits where the focal species was not recorded) [`visits_median/P70/P80/P90`]
+* The 50th/90th percentile of the number of visits to a site each year, for sites where the species has been observed in that year (i.e. including visits where the focal species was not recorded) [`visits_median/P90`]
 * The proportion of years in which the focal species has been recorded [`prop_of_years`]
 * The proportion of all site:year combinations, where the focal species is observed, that have > 1 visit [`prop_repeats_grp`]
 * Considering all the lists where the focal species was recorded, the proportion of lists that had length 1 (i.e. records only of the focal species) [`prop_list_one`]
@@ -683,9 +683,10 @@ MM <- read.csv('Results/metrics/model_data.csv')
 
 # Remove repeat variables from model data
 MM <- MM[,c('speciesName','FirstYrConverged',
-            'LastYrConverged','PropYrConverged')]
+            'LastYrConverged','PropYrConverged',
+            'mean_means')]
 
-# These merges drop a LOT of species that don't match. That is OK as the ones that don't
+# These merges drop a few species that don't match. That is OK as the ones that don't
 # match do not meet the data minimum criteria or we do not have model data for them, so
 # cannot use them for predictions.
 trendsData <- merge(x = LM, y = RM,
@@ -695,9 +696,10 @@ trendsData <- merge(x = MM, y = trendsData,
                     by.x= 'speciesName', by.y = 'species')
 head(trendsData)
 str(trendsData)
+nrow(trendsData)
 ```
 
-There are some species with no data in this dataset - although strangely they do have trends. We will remove these species.
+There are some species with no data in this dataset. We will remove these species.
 
 ```{r add_time_length_and_remove_spp_with_no_data}
 trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr"
@@ -890,13 +892,15 @@ Using both metrics is clearly better for splitting good and bad models, therefor
 
 Before running the classifiers, it is important to determine whether or not any of the variables are highly taxa dependent.  If they are, they are much less generalisable across data sets.
 
-This was done for all variables and the results from two of the variables are shown below:
+This was done for all variables and the results from three of the variables are shown below:
 
 * First is the violin plot for prop_repeats_grp: the proportion of site:year combinations for the species of interest which have more than one visit.
 
 * Second is the violin plot for prop_abs_list: the proportion of data for the taxonomic group _not including the species of interest_ which have a list length >1.
 
-The prop_repeats_grp data shows a broad range of results from 0 to 1 for all taxonomic groups.  By contrast, the prop_abs_list data shows very clear division between taxonomic groups.  Therefore, any partitioning on the basis of this variable is effectively a taxonomic division.  For this reason, prop_abs_list will not be used for producing decision trees.
+* Third is the violin plot for the prop_list_one: the proportion of records from visits with list length of 1.
+
+The `prop_repeats_grp` data shows a broad range of results from 0 to 1 for all taxonomic groups.  By contrast, the `prop_abs_list` data shows very clear division between taxonomic groups.  Similarly, the `prop_list_one` factor is distributed for some groups, but very close to 0 for others such as Lichens, FungusGnats and Rove Beetles.  Therefore, any partitioning on the basis of the `prop_abs_list` and `prop_list_one` variables are taxonomically biased.  For this reason, `prop_abs_list` and `prop_list_one` will not be used for producing decision trees.
 
 ```{r violin,echo=FALSE}
 violin <- function(y,title=NULL){
@@ -922,6 +926,9 @@ violin(td_taxa$prop_repeats_grp,title='Violin Plot of the proportion of repeats'
 violin(td_taxa$prop_abs_list,title='Violin Plot of proportion of absence data')
 ```
 
+```{r prop_list_one_violin,echo=FALSE,fig.cap="Violin plot for the prop_list_one variable, defined as the proportion of records from visits with list length equal to 1"}
+#violin(td_taxa$prop_list_one,title='Violin Plot of proportion of list length one')
+```
 
 \pagebreak
 
@@ -932,17 +939,15 @@ To examine the between all the variables, a pairs plot is produced below.  As ca
 Apart from number of records, which is not included in the classification tree, the variables show little cross correlation, suggesting they are a good choice for building a decision tree.
 
 ```{r pairspanels,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest"}
-td_sub <- trendsData[,c('P90','visits_P90','prop_of_years',
-                           'prop_repeats_grp','prop_list_one',
-                           'prop_abs','Spnvisits')]
+td_sub <- trendsData[,c('Spnvisits','P90','visits_P90','prop_of_years',
+                           'prop_repeats_grp','prop_abs')]
 pairs.panels(td_sub, hist.col = 'blue',smooth = TRUE)
 ```
 
-```{r pairspanels.with.logs,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest"}
+```{r pairspanels.with.logs,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest.  Spnvisits, P90 and visits_P90 have been log transformed for this version."}
 td_sub2 <- log10(trendsData[,c('Spnvisits','P90','visits_P90')]+1)
 td_sub2 <- cbind (td_sub2, trendsData[,c('prop_of_years',
-                           'prop_repeats_grp','prop_list_one',
-                           'prop_abs')] )
+                           'prop_repeats_grp','prop_abs')] )
 
 pairs.panels(td_sub2, hist.col = 'blue',smooth = TRUE)
 ```
@@ -1003,7 +1008,7 @@ for(taxa in sort(unique(RM$Taxa))){
 ggplot(data = df2, aes(TotalRecords)) + geom_histogram(binwidth = 2.5e4)
 ```
 
-```{r}
+```{r echo=FALSE}
 ggplot(data = df2) + 
   geom_point(aes(x = TotalRecords, y = RecordsIncluded/TotalRecords), colour = 'blue') + 
   ggtitle("Relationship of  proportion of records included to number of records") +
@@ -1039,14 +1044,17 @@ Overall, we found that `r round( mean(taxa_melt$value[taxa_melt$variable == "Rem
 
 #### Equally weighted decision tree
 
-Using the split in the models between 'good' and 'bad', you can create a classification tree that attempts to use the variables we have extracted to partition the data to the best of its ability using a decision tree.
+Using the split in the models between 'good' and 'bad', you can create a classification tree that attempts to use the variables we have extracted to partition the data to the best of its ability using a decision tree.  Some of the species do not have the proportion of years converged.  For these we use the simple decision tree: mean_year_precision >= 87.
 
 ```{r createdecisiontree}
 trendsData$bad <- rep('bad',nrow(trendsData))
 trendsData$bad[(trendsData$PropYrConverged < 0.3437 &
-                   trendsData$mean_year_precision >= 149.3) |
-                (trendsData$PropYrConverged >= 0.3437 &
-                   trendsData$mean_year_precision >= 60.02)] <- ' good'
+                  trendsData$mean_year_precision >= 149.3) |
+                  (trendsData$PropYrConverged >= 0.3437 &
+                   trendsData$mean_year_precision >= 60.02) |
+                  (is.na(trendsData$PropYrConverged) &
+                   trendsData$mean_year_precision >= 87)] <- ' good'
+trendsData$bad <- as.factor(trendsData$bad)
 
 # Perform the fit.  The loss parameter in the rpart function determines the
 # weighting:
@@ -1058,13 +1066,12 @@ trendsData$bad[(trendsData$PropYrConverged < 0.3437 &
 badweight <- 1
 goodweight <- 1
 
-fit <- rpart(bad ~ median + P90 + zmedian + zP90 +
-               visits_median + visits_P70 + visits_P80 + visits_P90 +
-               prop_of_years + prop_repeats_grp + prop_list_one +
-               prop_abs,
+fit <- rpart(bad ~ median + P90 + visits_median + visits_P90 +
+               prop_of_years + prop_repeats_grp + prop_abs,
         method = "class",
         data = trendsData,
-        parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)))
+        parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)),
+        control = rpart.control(minsplit=nrow(trendsData)*0.05))
 
 printcp(fit) # display the results
 ```
@@ -1081,7 +1088,6 @@ Below is a summary of the fit calculations.  The relative importance of the vari
 * `prop_abs`: proportion of visits within a taxonomic group which did not record the species of interest
 * `prop_of_years`: proportion of years wiuth records for the species of interest
 * `visits_P90`: 90th percentile of records in a year, for sites where the species of interest was observed in that year
-* `prop_list_one`: proportion of records for which the species of interest is recorded, with list length of 1
 
 
 ```{r fit_summary,fig.cap='Unpruned decision tree for species occupancy modelling'}
@@ -1110,9 +1116,10 @@ pfit <- prune(fit, cp = fit$cptable[which.min(fit$cptable[,"xerror"]),"CP"])
 rpart.plot(pfit, extra = 108, under = F, type = 4, clip.right.labs = FALSE, branch=0.7)
 ```
 
+
 A graphic way of considering this is in the following graph:
 
-```{r plot_decision_tree_by_bad, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group"}
+```{r plot_decision_tree_by_bad, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group", echo=FALSE}
 
 ggplot(data = trendsData, aes(x = logit(prop_abs), y = log10(P90), 
              col = as.factor(bad))) +
@@ -1127,7 +1134,7 @@ ggplot(data = trendsData, aes(x = logit(prop_abs), y = log10(P90),
 
 ```
 
-```{r plot_decision_tree_by_taxon, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group"}
+```{r plot_decision_tree_by_taxon, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group", echo=FALSE}
 
 ggplot(data = trendsData, aes(x = logit(prop_abs), y = log10(P90), 
              col = as.factor(bad))) +
@@ -1232,11 +1239,12 @@ The first one below is with a 10:1 good:bad ratio i.e. it is 10x more important 
 # produce a decision tree for goodweight = 10
 badweight <- 1
 goodweight <- 10
-fit_good <- rpart(bad ~ median + P90 + zmedian + zP90 + visits_median + visits_P70 +                         visits_P80 + visits_P90 + prop_of_years + prop_repeats_grp +
-                    prop_list_one + prop_abs,
-             method = "class",
-             data = trendsData,
-             parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)))
+fit_good <- rpart(bad ~ median + P90 + visits_median + visits_P90 +
+                    prop_of_years + prop_repeats_grp + prop_abs,
+                  method = "class",
+                  data = trendsData,
+                  parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)),
+                  control = rpart.control(minsplit=nrow(trendsData)*0.05))
 
 # prune the tree 
 pfit_good <- prune(fit_good,
@@ -1311,13 +1319,12 @@ The decision tree below is with a 1:10 good:bad ratio i.e. it is 10x more import
 # produce a decision tree for badweight = 10
 goodweight <- 1
 badweight <- 10
-fit_bad <- rpart(bad ~ median + P90 + zmedian + zP90 +
-                    visits_median + visits_P70 + visits_P80 + visits_P90 +
-                    prop_of_years + prop_repeats_grp + prop_list_one +
-                    prop_abs,
+fit_bad <- rpart(bad ~ median + P90 + visits_median + visits_P90 +
+                    prop_of_years + prop_repeats_grp + prop_abs,
              method = "class",
              data = trendsData,
-             parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)))
+             parms = list(loss = matrix(c(0,goodweight,badweight,0),ncol = 2)),
+             control = rpart.control(minsplit=nrow(trendsData)*0.05))
 
 # prune the tree 
 pfit_bad <- prune(fit_bad,
@@ -1360,7 +1367,7 @@ If Spnvisits (number of records) is allowed back into the decision tree, the onl
 
 One of the possible concerns in applying this more widely is that while we found that P90 was an important parameter in the decision tree, it could also be strongly correlated with P50 (i.e. the median number of visits per year). We note that we have good prior reasons for thinking that P90 is useful (because it allows good estimation of detection), but here we test the relationship between the two.
 
-```{r plot.median.v.P90}
+```{r plot.median.v.P90, echo=FALSE}
 
 mod.M.v.P90 <- lm(log10(td$P90)~log10(td$median))
 
@@ -1424,7 +1431,8 @@ mod.limit.of.precision <- rq(
 segment.ys <- 
   10^(predict(mod.limit.of.precision,
               newdata = data.frame('P90' = c(8.7,max(td.p90.8_7$P90)))))
-
+```
+```{r plot_P90_by_precision, echo=FALSE}
 plot <- ggplot() +
   geom_point(aes(x = td$P90,
                  y = td$mean_year_precision,
