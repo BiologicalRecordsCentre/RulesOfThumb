@@ -1079,7 +1079,7 @@ ggplot(data = trendsData %>%
          filter(mean_year_precision>5 & mean_year_precision<1e6 & mean_means>0.001)) +
   geom_point(aes(x = mean_year_precision, y = mean_means, color = model_good),
              alpha = 0.05) +
-  scale_color_manual(values = c('red','blue')) +
+  scale_color_manual(values = c('blue','red')) +
   ylab('Mean Occupancy') + xlab('Model Precision') +
   scale_y_log10(breaks = c(1,0.2,0.05,0.01)) +
   scale_x_log10(labels = comma) +
