@@ -64,7 +64,7 @@ The metrics describe the data that we have for a species and can be used to pred
 
 These metrics measure the quality of the model produced and are what we will use to develop the rules of thumb:
 
-* The precision of the trend where `Precision <- 1/(sd(long_term_gr)^2)` and `long_term_gr` is a vector of annual growth rates where the `length()` of long_term_gr is equal to the number of model iterations [`precision_growth_rate`]
+* The precision of the trend where `Precision <- 1/(sd(long_term_gr)^2)` and `long_term_gr` is a vector of annual growth rates where the `length()` of `long_term_gr` is equal to the number of model iterations [`precision_growth_rate`]
 * Average precision of the year estimates where precision is defined in the same way as above [`mean_year_precision`]
 * Proportion of years with converged Rhat [`PropYrConverged`]
 
@@ -74,9 +74,9 @@ The data are in a few different locations and in most cases we need to go to mor
 
 ### Read in CIRRUS outputs
 
-First, set up the location of the files to be read in
+First, the CIRRUS outputs were loaded up, processed and saved.  These were the model output data, including information on years which converged and numbers of records.
 
-```{r, eval = FALSE}
+```{r, eval = FALSE, echo = FALSE}
 files_are_here <-
   "W:/PYWELL_SHARED/Pywell Projects/BRC/Charlie/1.c. New Model Rerun/4. Outputs/CIRRUS"
 
@@ -89,18 +89,16 @@ rdata_files <- list.files(files_are_here,
 rdata_files <- rdata_files[grepl('20000_update', rdata_files)]
 ```
 
-Count up the number of files and set up some variables
-
-```{r, eval = FALSE}
+```{r, eval = FALSE, echo = FALSE}
+#Count up the number of files and set up some variables
 num_files <- length(rdata_files)
 speciesName <- quant25 <- Spnsite <- Spnvisits <- nyears <-
   PropYrConverged <- Totalnvisits <- Totalnsites <- FirstYrConverged <-
   LastYrConverged <- c(rep('',num_files*2))
 ```
 
-Get what data we can from the model outputs
-
-```{r getdatafrommodel, eval = FALSE}
+```{r getdatafrommodel, eval = FALSE, echo = FALSE}
+#Get what data we can from the model outputs
 plot_species <- function(new_data, x, species, main = ''){
   
   new_data <- as.data.frame(new_data)
@@ -223,22 +221,21 @@ SpeciesData <- data.frame(speciesName, Spnsite, Spnvisits, SpvisitPerSite,
                           LastYrConverged, PropYrConverged)
 ```
 
-```{r savefirdstdata, eval=FALSE}
+```{r savefirdstdata, eval=FALSE, echo=FALSE}
 write.csv(SpeciesData,
           file = 'Results/metrics/model_data.csv', row.names = FALSE)
 ```
 
 ```{r viewmodeldata}
 model_data <- read.csv('Results/metrics/model_data.csv')
-str(model_data)
 head(model_data)
 ```
 
 ### Posteriors
 
-We can also get data on the trend estimate from the 1000 posteriors that Charlie has already calculated. This is for all species groups regardless of whether they were run on Cirrus or JASMIN. We have to remove some years full of NAs. This is where the model is run to a year where there is no data. As a consequence some of the 'final 10 years' runs will actually be for a shorter period.
+We can also get data on the trend estimate from the 1000 posteriors that Charlie Outhwaite calculated. This is for all species groups regardless of whether they were run on Cirrus or JASMIN. We have to remove some years full of NAs. This is where the model is run to a year where there is no data. As a consequence some of the 'final 10 years' runs will actually be for a shorter period.
 
-```{r trendfrom1000posterior, eval = FALSE}
+```{r trendfrom1000posterior, eval = FALSE, echo = FALSE}
 path_to_posteriors <-
   file.path('W:/PYWELL_SHARED/Pywell Projects/BRC/Charlie/1.c. New Model Rerun',
             '6. Indicators and other analyses/1000 posterior samples')
@@ -341,9 +338,7 @@ for(data_file in rdata_files){
 }
 ```
 
-Once we have the data for all species we can add the data together into one file
-
-```{r combineposteriorfiles, eval = FALSE}
+```{r combineposteriorfiles, eval = FALSE, echo = FALSE}
 LMfiles <- list.files(path = 'Results/metrics',
                       pattern = '^posteriorLM',
                       full.names = TRUE)
@@ -359,7 +354,9 @@ for(i in LMfiles){
                                'mean_year_precision')])  
 
 }
+```
 
+```{r combine_and_write, eval = FALSE}
 write.csv(master, file = 'Results/metrics/ALL_posteriorLM.csv',
           row.names = FALSE)
 
@@ -369,7 +366,7 @@ write.csv(master, file = 'Results/metrics/ALL_posteriorLM.csv',
 
 There are some additional stats we can get from the raw data file. Again, these are for all groups not just CIRRUS/JASMIN runs. Given the memory requirements needed to reformat the plant and moth data they have been removed them from this step and will be incorporated after producing the classification trees.
 
-```{r rawcirrusdatafiles, eval = FALSE}
+```{r rawcirrusdatafiles, eval = FALSE, echo = FALSE}
 dataMetrics <- function(sp, basen, species_obs, hab=NULL, 
                         habitat=FALSE, region=FALSE, suffix=NULL, years = FALSE){
   
@@ -649,9 +646,8 @@ for(data_file in data_files){
 }
 ```
 
-Once we have the data for all species we can add the data together into one file
-
-```{r combinerawdatafiles, eval = FALSE}
+```{r combinerawdatafiles, eval = FALSE, echo=FALSE}
+# Once we have the data for all species we can add the data together into one file
 rawdataFiles <- list.files(path = 'Results/metrics',
                       pattern = '^rawMetrics',
                       full.names = TRUE)
@@ -664,7 +660,9 @@ for(i in rawdataFiles){
   master <- rbind(master, x)  
 
 }
+```
 
+```{r combined_rawMetrics_write, eval = FALSE}
 write.csv(master, file = 'Results/metrics/ALL_rawMetrics.csv',
           row.names = FALSE)
 ```
@@ -673,7 +671,7 @@ write.csv(master, file = 'Results/metrics/ALL_rawMetrics.csv',
 
 ### Create metrics
 
-We can do some simple decision tree statistics to develop rules of thumb once we have decided what constitutes a 'bad' model. Here I choose some metrics that make for a bad model and use the `rpart` package to create a decision tree.
+We can do some simple decision tree statistics to develop rules of thumb once we have decided what constitutes a 'bad' model. Here we choose some metrics that make for a bad model and use the `rpart` package to create a decision tree.
 
 First, combine all the data
 
@@ -682,33 +680,34 @@ RM <- read.csv('Results/metrics/ALL_rawMetrics.csv')
 LM <- read.csv('Results/metrics/ALL_posteriorLM.csv')
 MM <- read.csv('Results/metrics/model_data.csv')
 
-# Remove repeat variables from model data
+# Remove repeat variables from model data.  The mean_means variable is the mean
+#  occupancy for the model across all years
 MM <- MM[,c('speciesName','FirstYrConverged',
             'LastYrConverged','PropYrConverged',
             'mean_means')]
 
-# These merges drop a few species that don't match. That is OK as the ones that don't
-# match do not meet the data minimum criteria or we do not have model data for them, so
-# cannot use them for predictions.
+# These merges drop species wit no model data
 trendsData <- merge(x = LM, y = RM,
                      by.x = 'species',
                      by.y = 'species')
 trendsData <- merge(x = MM, y = trendsData,
                     by.x= 'speciesName', by.y = 'species')
-head(trendsData)
-str(trendsData)
+head(trendsData[c('speciesName','PropYrConverged','mean_means','avVisitPerYear',
+                  'Spnvisits','SpvisitPerYear','Totalnvisits','median','P90',
+                  'prop_repeats_grp','visits_median','visits_P90','prop_of_years',
+                  'prop_abs_list','prop_abs','Taxa','Taxa_Root')])
 nrow(trendsData)
+# Assign a category to identify those models which are just from last 10 yrs
+trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr"
 ```
 
 There are some species with no data in this dataset. We will remove these species.
 
 ```{r add_time_length_and_remove_spp_with_no_data}
-trendsData$last10yr <- substring(trendsData$Taxa,1,8) == "last10yr"
-
 sum(trendsData$P90==0)
-
 trendsData <- trendsData[trendsData$P90>0,]
 ```
+
 
 \pagebreak
 
@@ -717,6 +716,8 @@ trendsData <- trendsData[trendsData$P90>0,]
 Next, define which of the species have 'good' models and which are 'bad'.
 
 This was done by consultation with 3 experts on the models, testing them on 100 models which were sampled to provide a spread of examples across the dataset, with a cluster of models focused around the range in which there was likely to be controversial.
+
+Below are graphs showing the distribution of `precision_growth_rate` (Figure 1) and `mean_year_precision` (Figure 2).
 
 
 ```{r definegoodandbadmodels}
@@ -730,21 +731,20 @@ ggplot(trendsData, aes(x = precision_growth_rate)) + geom_histogram(bins=20) +
   scale_x_log10(labels=scales::comma) + theme_light()
 ```
 
-
-\pagebreak
 ```{r definegoodandbadmodels2}
 quantile(trendsData$mean_year_precision)
 ```
 
+
+\pagebreak
 
 ```{r plot_hist2,echo=FALSE,fig.cap="Histogram of the mean year precision for all models"}
 ggplot(trendsData, aes(x = mean_year_precision)) + geom_histogram(bins=20) +
   scale_x_log10(labels=scales::comma) + theme_light()
 ```
 
+Below are the results of the consultation.  Figure 3 shows the score given to each model where the score is the number of experts who thought the model was of good quality.  The models not used in the assessment are shown in the background in grey
 
-\pagebreak
-Below are the results of the consultation.  This graph shows the score given to each model where the score is the number of experts who thought the model was of good quality.  The models not used in the assessment are shown in the background in grey
 ```{r consultation_results}
 # Lets look at the results of the consultation with model experts
 fsdf <- read.csv(file = 'Results/Consultation/fsdf_full.csv')
@@ -773,7 +773,6 @@ ggplot() +
   xlab("Growth Rate Precision") + ylab("Mean Year Precision")
 ```
 
-
 ```{r plot_consultation2,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, plotting mean year precision vs the proportion of years which converged. Coloured points show the score assigned to models: light blue represents a score of 3 or unanimously a good model; black shows a score of 0, or unanimously a bad model.  Light grey points in the background show all models which were not part of the consultation"}
 
 ggplot() +
@@ -796,17 +795,17 @@ ggplot() +
   xlab("Proportion of Years which Converged") + ylab("Mean Year Precision")
 ```
 
-
-\pagebreak
-The graphs above show the results of the consultation with experts on the model.  There was unanimous agreement on 80% of the models about which were 'good' and 'bad'.  The models chosen for this consultation were deliberately difficult to tell apart, so a 80% unanimous agreeement is considered very good.
+The graphs (Figures 3 and 4) show the results of the consultation with experts on the model.  There was unanimous agreement on 80% of the models about which were 'good' and 'bad'.  The models chosen for this consultation were deliberately difficult to tell apart, so a 80% unanimous agreeement is considered very good.
 
 Plotting these scores against proportion of years which converged, mean year precision and growth rate precision show that these parameters are correlated with quality, but it is not obvious how to perform this split.
+
+\pagebreak
 
 ### Classification tree
 
 To decide which models would be classified as good and bad, a decision tree was created to automatically classify the 100 models tested on.  The models with a score of 2 or 3 were classified as good, while the models with a score of 0 or 1 were classified as bad.
 
-Two decision trees are shown below, one using the proportion of years converged, and the other not, for comparison.
+Two decision trees are shown below, one using the proportion of years converged (Figure 6), and the other not (Figure 5), for comparison.
 
 
 ```{r decisions_precision, fig.cap="Decision tree for deciding which models are good or bad based on precision only"}
@@ -829,15 +828,9 @@ fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate + PropYrCon
 
 
 ```{r plot_tree_convergence,fig.cap="Decision tree for deciding which models are good or bad based on precision and convergence"}
-#plot(fit_fsdf, uniform=TRUE, 
-#     main = "Which models are good or bad (precision and convergence)?",
-#     margin = .1)
-#text(fit_fsdf, use.n = TRUE,
-#     all = TRUE,
-#     cex = .7)
 rpart.plot(fit_fsdf, extra = 108, type = 4, clip.right.labs = FALSE)
-
 ```
+
 ```{r plot_consultation_decisiontree,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, including the results of the decision tree.  Light grey points in the background show all models which were not part of the consultation"}
 ggplot() +
   geom_point(data=trendsData[trendsData$mean_year_precision>6&
@@ -864,14 +857,16 @@ ggplot() +
   geom_segment(aes(x=0, y = 87, xend = 1, yend = 87), color = 'red', linetype = 2) 
 ```
 
+
 \pagebreak
+
 The success of the decision tree for classifying bad models is:
 
-* Using precision only:  92% for bad models, 85% for good models
+* Using precision only:  92% for bad models, 85% for good models (Figure 5)
 
-* Using precision and convergences: 95% for bad models, 95% for good models
+* Using precision and convergences: 95% for bad models, 95% for good models (Figure 6)
 
-Using both metrics is clearly better for splitting good and bad models, therefore this split will be used.  The split is as follows:
+Using both metrics is clearly better for splitting good and bad models, therefore this split will be used.  The split is shown in Figure 7:
 
 * If the proportion of years converged is < 0.3437, the model will be classified as 'bad' if the mean year precision is < 149.3
 
@@ -886,9 +881,9 @@ Before running the classifiers, it is important to determine whether or not any 
 
 This was done for all variables and the results from two of the variables are shown below:
 
-* First is the violin plot for prop_repeats_grp: the proportion of site:year combinations for the species of interest which have more than one visit.
+* First is the violin plot for prop_repeats_grp: the proportion of site:year combinations for the species of interest which have more than one visit (Figure 8).
 
-* Second is the violin plot for prop_abs_list: the proportion of data for the taxonomic group _not including the species of interest_ which have a list length >1.
+* Second is the violin plot for prop_abs_list: the proportion of data for the taxonomic group _not including the species of interest_ which have a list length >1 (Figure 9).
 
 The `prop_repeats_grp` data shows a broad range of results from 0 to 1 for all taxonomic groups.  By contrast, the `prop_abs_list` data shows very clear division between taxonomic groups.  Therefore, any partitioning on the basis of the `prop_abs_list` variable is taxonomically biased.  For this reason, `prop_abs_list` will not be used for producing decision trees.
 
@@ -907,10 +902,10 @@ ggplot(td_taxa, aes(x=Taxa,y=y)) +
 td_taxa <- trendsData[as.character(trendsData$Taxa)==
                       as.character(trendsData$Taxa_Root),]
 ```
+
 ```{r prop_repeats_grp_violin,echo=FALSE,fig.cap="Violin plot for the prop_repeats_grp variable, defined as the proportion of all site:year combinations, where the focal species is observed, that have more than 1 visit for that taxonomic group"}
 violin(td_taxa$prop_repeats_grp,title='Violin Plot of the proportion of repeats')
 ```
-
 
 ```{r prop_abs_violin,echo=FALSE,fig.cap="Violin plot for the prop_abs_list variable, defined as the proportion of records with list length greater than 1, for all records where the focal species was not observed"}
 violin(td_taxa$prop_abs_list,title='Violin Plot of proportion of absence data')
@@ -921,22 +916,28 @@ violin(td_taxa$prop_abs_list,title='Violin Plot of proportion of absence data')
 
 ### Correlation between variables
 
-To examine the between all the variables, a pairs plot is produced below.  As can be seen, P90 is strongly correlated with number of records (Spnvisits), as expected.  Prop_abs is negatively correlated with number of records, as the fewer the records for a species, the higher the proportion of taxonomic data without the species of interest.
+To examine the between all the variables, 2 pairs plots are produced below:
+
+* Linear plots (Figure 10)
+ 
+* Plots with `Spnvisits`, `P90` and `visits_P90` log transformed (Figure 11)
+ 
+As can be seen, P90 is strongly correlated with number of records (`Spnvisits`), as expected.  `Prop_abs` is negatively correlated with number of records, as the fewer the records for a species, the higher the proportion of taxonomic data without the species of interest.
 
 Apart from number of records, which is not included in the classification tree, the variables show little cross correlation, suggesting they are a good choice for building a decision tree.
 
-```{r pairspanels,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest"}
-td_sub <- trendsData[,c('Spnvisits','P90','visits_P90',
-                           'prop_repeats_grp','prop_abs')]
+```{r pairspanels,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest",echo=FALSE}
+td_sub <- trendsData[,c('Spnvisits','P90','visits_P90','prop_repeats_grp','prop_abs')]
 pairs.panels(td_sub, hist.col = 'blue',smooth = TRUE)
 ```
 
-```{r pairspanels.with.logs,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest.  Spnvisits, P90 and visits_P90 have been log transformed for this version."}
+```{r pairspanels.with.logs,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest.  Spnvisits, P90 and visits_P90 have been log transformed for this version.",echo=FALSE}
 td_sub2 <- log10(trendsData[,c('Spnvisits','P90','visits_P90')]+1)
 td_sub2 <- cbind (td_sub2, trendsData[,c('prop_repeats_grp','prop_abs')] )
 
 pairs.panels(td_sub2, hist.col = 'blue',smooth = TRUE)
 ```
+
 
 \pagebreak
 
@@ -948,13 +949,11 @@ In order to be included in the dataset, one preliminary filtering step was carri
 
 * If there was another record for another dragonfly to the same site in 1990, but no other records for that site, both of these records would be removed from the database.
 
-This step was carried out as it was carried out on the data prior to running the models.  Failing to do this step would make the results invalid.
+This step was carried out as it was carried out on the data prior to running the models.  Failing to do this step would make the results invalid.  This means that any decision tree below has the pre-requisite that all records in the database must meet this requirement.  To show the effect of this step, a plot showing the proportion of records removed versus the number of records in each group is shown in Figure 12.  A graph showing the proportion of records for each taxonomic group is shown in Figure 13.
 
-This means that any decision tree below has the pre-requisite that all records in the database must meet this requirement.
+Tables are below to show all taxonomic groups with more than 400,000 records removed (Table 1), and all groups with more than 50% of records removed (Table 2). 
 
-To show the effect of this step, below is a plot showing the proportion of the records removed for each taxonomic group.
-
-```{r prop_removed}
+```{r prop_removed, echo = FALSE}
 # Read in the metrics
 RM <- read.csv('Results/metrics/ALL_rawMetrics.csv')
 RM <- RM[RM$Taxa==as.character(RM$Taxa_Root),]
@@ -978,7 +977,7 @@ for(taxa in sort(unique(RM$Taxa))){
 taxa_melt <- melt(df, id=c('taxa'))
 ```
 
-```{r rec_rem_hist}
+```{r rec_rem_hist, echo = FALSE}
 df2 <- NULL
 
 for(taxa in sort(unique(RM$Taxa))){
@@ -993,20 +992,6 @@ for(taxa in sort(unique(RM$Taxa))){
 }
 ```
 
-```{r rec_rem_hist_plot, fig.cap="Histogram showing number of records removed from each taxonomic group due to the input data requirement of repeat visits.  As can be seen, most taxonomic groups have less than 100,000 records removed due to this step, while a couple of groups have in excess of 400,000 removed.  These groups are shown below", echo = FALSE}
-ggplot(data = df2, aes(RecordsExcluded)) + geom_histogram(binwidth = 2.5e4) +
-  ylab('Count of taxonomic groups') + xlab('Number of records removed from group') +
-  scale_x_continuous(labels = scales::comma)
-```
-
-```{r kable_rec_ex_hi, echo = FALSE}
-df2 %>%
-  filter(RecordsExcluded > 400000) %>%
-  kable(format = 'latex',
-        caption = 'List of taxa with more than 400,000 records removed') %>%
-  column_spec(2)
-```
-
 ```{r prop_remo_plot, echo=FALSE, fig.cap="Plot showing proportion of records included vs total number of records.  As can be seen, most taxonomic group retain at least half of their records.  Those which retain fewer than 50% of their recdords are shown below"}
 ggplot(data = df2) + 
   geom_point(aes(x = TotalRecords, y = ProportionIncluded), colour = 'blue') + 
@@ -1017,6 +1002,13 @@ ggplot(data = df2) +
   theme_bw()
 ```
 
+```{r kable_rec_ex_hi, echo = FALSE}
+df2 %>%
+  filter(RecordsExcluded > 400000) %>%
+  kable(format = 'latex',
+        caption = 'List of taxa with more than 400,000 records removed') %>%
+  column_spec(2)
+```
 
 ```{r kable_taxa_rec_rem, echo=FALSE}
 df2 %>%
@@ -1025,7 +1017,6 @@ df2 %>%
         caption = 'List of taxa with more than half of records removed') %>%
   column_spec(2)
 ```
-
 
 ```{r stack_fn, echo=FALSE}
 # Plot the results
@@ -1042,15 +1033,13 @@ stack_records <- function(df,colours,ylabel,title){
 }
 ```
 
-```{r stack_all,fig.cap='Graph showing the proportion of records which are included in the models. Those which are not are excluded or to sites which only received visit(s) in one year within the taxonomic group'}
+```{r stack_all,fig.cap='Graph showing the proportion of records which are included in the models. Those which are not are excluded or to sites which only received visit(s) in one year within the taxonomic group',echo=FALSE}
 stack_records(taxa_melt, colours = c('red', '#9999FF'),
               ylabel = 'Proportion of records',
               title = 'Proportion of records which are included')
 ```
 
-Overall, we found that `r round( mean(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` of all records were removed, varying from `r round( min(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` to `r round( max(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` across projects
-
-\pagebreak
+Overall, we found that `r round( mean(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` of all records were removed, varying from `r round( min(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` to `r round( max(taxa_melt$value[taxa_melt$variable == "Removed"]), 2)` across taxonomic groups.
 
 ### Splitting the output data into good and bad models
 
@@ -1064,7 +1053,6 @@ trendsData$model_good[(trendsData$PropYrConverged < 0.3437 &
                    trendsData$mean_year_precision >= 60.02) |
                   (is.na(trendsData$PropYrConverged) &
                    trendsData$mean_year_precision >= 87)] <- 'good'
-
 trendsData$model_good <- factor(trendsData$model_good, levels = c('good','bad'))
 ```
 
@@ -1072,14 +1060,14 @@ trendsData$model_good <- factor(trendsData$model_good, levels = c('good','bad'))
 
 For species which have a very low occupancy, the absolute precision on the occupancy estimate can be very high even if there is very little data.  Conversely, a common or high occupancy species is is likely to have a low precision estimate even with a decent number of records.  This is due to the fact that uncertainty on a high occupancy number equates to a greater absolute range in occupancy estimate when compared to the same relative uncertainty on a lower occupancy number.
 
-This effect is shown in the below graph showing mean occupancy vs precision.
+This effect is demonstrated in Figure 14, showing mean occupancy vs precision.
 
-```{r occ_vs_precision, echo=FALSE}
+```{r occ_vs_precision, echo=FALSE, fig.cap='Plot of precision of trend vs mean occupancy for all species in the database.  As can be seen, there is a clear negative relationship, indicating that it is easier to obtain a higher precision when a species is rare.  There is a cloud of data points also at <100 precision and occupancy of .2 to .8.  This cloud is interpreted as all species for which there is almost no data, so the model just has a guess'}
 ggplot(data = trendsData %>%
          filter(mean_year_precision>5 & mean_year_precision<1e6 & mean_means>0.001)) +
   geom_point(aes(x = mean_year_precision, y = mean_means, color = model_good),
              alpha = 0.05) +
-  scale_color_manual(values = c('blue','red')) +
+  scale_color_manual(values = c('red','blue')) +
   ylab('Mean Occupancy') + xlab('Model Precision') +
   scale_y_log10(breaks = c(1,0.2,0.05,0.01)) +
   scale_x_log10(labels = comma) +
@@ -1096,13 +1084,15 @@ After discussion, it was decided to drop all species with an occupancy of <0.05 
 trendsData <- trendsData %>% filter(mean_means > 0.05)
 ```
 
+\pagebreak
+
 ### Classification trees
 
 #### Equally weighted decision tree
 
 Using the split in the models between 'good' and 'bad', you can create a classification tree that attempts to use the variables we have extracted to partition the data to the best of its ability using a decision tree.
 
-For this decision tree the evtree function is being used.  This function creates a globally optimised decision tree, rather than a greedy decision tree.  This results in more accuracy though the processing time is longer.
+For this decision tree the evtree function is being used.  This function creates a globally optimised decision tree, rather than a greedy decision tree.  This results in more accuracy though the processing time is longer.  As the processing time is long, the decision trees are loaded from file rather than running here.
 
 ```{r createdecisiontree, eval=FALSE}
 # Perform the fit
@@ -1116,6 +1106,7 @@ ev <- evtree(model_good ~ median + P90 + visits_median + visits_P90 +
                               goodweight, badweight),
              control = evtree.control(maxdepth = 2))
 ```
+
 ```{r load_tree,fig.cap='Decision tree for rules of thumb'}
 load(file = 'ev_trees.Rdata')
 ev <- ev_trees$ev
@@ -1123,11 +1114,11 @@ ev
 plot(ev)
 ```
 
-The first node in this decision tree is `prop_abs` >= 0.987.  To meet this requirement, at least 98.7% of the data for the taxonomic group needs to come from species other than the species of interest.  This is equivalent to 76 additional records for other species for every 1 record of the species of interest.
+The decision tree is shown in Figure 15.  The first node in this decision tree is `prop_abs` >= 0.987.  To meet this requirement, at least 98.7% of the data for the taxonomic group needs to come from visits where species other than the species of interest were observed.  This is equivalent to 76 additional visits for every 1 visit in which species of interest was observed.
 
-For example, if there were 2000 records within a group, and 40 records of the species of interest, prop_abs would be (2000-40)/2000 = .98.  This species would therefore not meet this criterion.  However, a species with 40 records within a group of 4000 records would meet this criterion (prop_abs = .99)
+For example, if there were 2000 visits within a group, and 40 of these visits in which the species of interest was observed, prop_abs would be (2000-40)/2000 = .98.  This species would therefore not meet this criterion.  However, a species with 40 visits within a group of 4000 visits would meet this criterion (prop_abs = .99)
 
-The second node is `P90`.  This is the 90th percentile of number of records for years which have records.
+The second node is `P90`.  This is the 90th percentile of number of records of the species of interest for years which have records.
 
 To be classisified as worth running a model:
 
@@ -1150,15 +1141,13 @@ FN <- sum(predict(ev)!=trendsData$model_good & predict(ev)=='bad')
 
 This decision tree has a positive precision (TP/(TP+FP)) of `r round(TP*100/(TP+FP),1)`%, meaning  `r round(TP*100/(TP+FP),1)`% of the time, if the decision tree predicts the data will be able to produce a good model, it will.
 
-This decision tree has a negative precision (TN/(TN+FN)) of `r round(TN*100/(TN+FN),1)`%, meaning  `r round(TN*100/(TN+FN),1)`% of the time, if the decision tree predicts the data will not be able to produce a good model, it will indeed not produce a good model.
+This decision tree has a negative precision (TN/(TN+FN)) of `r round(TN*100/(TN+FN),1)`%, meaning  `r round(TN*100/(TN+FN),1)`% of the time, if the decision tree predicts the data will *not* be able to produce a good model, it will indeed not produce a good model.
 
 The recall/sensitivity/true positive rate (TP/(TP+FN)) is `r round(TP*100/(TP+FN),1)`%, meaning `r round(TP*100/(TP+FN),1)`% of all datasets which would produce a good model are classified as good datasets.
 
-The specificity/true negative rate (TN/(TN+FP)) is `r round(TN*100/(TN+FP),1)`%, meaning `r round(TN*100/(TN+FP),1)`% of all datasets which would NOT produce a good model are classified as bad.
+The specificity/true negative rate (TN/(TN+FP)) is `r round(TN*100/(TN+FP),1)`%, meaning `r round(TN*100/(TN+FP),1)`% of all datasets which would *not* produce a good model are classified as bad.
 
-\pagebreak
-
-A graphic way of considering the decision tree is in the following graphs.  These graphs have the decision tree cutoffs shown in a black line, where any data below the line are predicted as not producing a good model and any above the line are predicted as having enough data.  Points coloured blue did in fact produce a good model, while those below the line did not:
+A graphic way of considering the decision tree is in Figure 16.  This graph has the decision tree cutoffs shown in a black line, where any data below the line are predicted as not producing a good model and any above the line are predicted as having enough data.  Points coloured blue did in fact produce a good model, while those below the line did not:
 
 ```{r plot_decision_tree_by_bad, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group", echo=FALSE}
 
@@ -1176,22 +1165,6 @@ ggplot(data = trendsData, aes(x = prop_abs, y = P90, col = as.factor(model_good)
 
 ```
 
-```{r plot_decision_tree_by_taxon, fig.cap = "The results of the decision tree with P90 on a log-scale, and prop_abs on a logit scale, by taxonomic group and splitting 10 year and all year trends", echo=FALSE}
-
-ggplot(data = trendsData, aes(x = prop_abs, y = P90, 
-             col = as.factor(model_good))) +
-  geom_point() +
-  scale_x_continuous(breaks = c(.2,.999), trans = 'logit') +
-  scale_y_continuous(breaks = c(10,1000), trans = 'log10') +
-  scale_color_manual(values=c('#0571b035', '#ca002035'),
-                     name='Trend output') + 
-  facet_wrap(~Taxa)  +
-  geom_segment(aes(x=0.2, y = 7.4, xend = 0.987, yend = 7.4), color = 'black') +
-  geom_segment(aes(x=0.987, y = 7.4, xend = 0.987, yend = 4.3), color = 'black') +  
-  geom_segment(aes(x=0.987, y = 4.3, xend = 0.99999, yend = 4.3), color = 'black') +
-  theme_bw()
-
-```
 
 \pagebreak
 
@@ -1199,9 +1172,9 @@ ggplot(data = trendsData, aes(x = prop_abs, y = P90,
 
 The decision tree is computed again twice more.  In these models, the penalty for misclassifying good models as bad, or vice versa, is varied.
 
-The first one below is with a 10:1 good:bad ratio i.e. it is 10x more important to correctly classify good models as good.  This weighting makes the decision tree much more specific, at the expense of sensitivity.
+The first one below (Figure 17) is with a 10:1 good:bad ratio i.e. it is 10x more important to correctly classify good models as good.  This weighting makes the decision tree much more specific, at the expense of sensitivity.
 
-By using a 10:1 good:bad ration, models which are classified as good are very likely to be good.  As such, this decision tree can be considered an aspirational target.
+By using a 10:1 good:bad ratio, models which are classified as good are very likely to be good.  As such, this decision tree can be considered an aspirational target.
 
 Note that in the decision tree the values for n are not correct.  This is due to the method evtree uses for weighting decisions: by replicating data of one output, in this case it replicates the 'bad' output 10x, such that assigning each of these outputs as bad becomes 10x more signigicant.
 
@@ -1218,6 +1191,7 @@ ev_aspire <- evtree(model_good ~ median + P90 + visits_median + visits_P90 +
                     control = evtree.control(maxdepth = 2))
 save(x = ev_aspire, file = 'ev_aspire.Rdata')
 ```
+
 ```{r load_goodtree,fig.cap='Decision tree for aspirational targets'}
 ev_aspire <- ev_trees$ev_aspire
 ev_aspire
@@ -1231,9 +1205,9 @@ TN_aspire <- sum(predict(ev_aspire)==trendsData$model_good & predict(ev_aspire)=
 FN_aspire <- sum(predict(ev_aspire)!=trendsData$model_good & predict(ev_aspire)=='bad')
 ```
 
-The first node in this decision tree is `prop_abs` >= 0.957.  To meet this requirement, at least 95.7% of the data for the taxonomic group needs to come from species other than the species of interest.  This is equivalent to 23 additional records for other species for every 1 record of the species of interest.
+The first node in this decision tree is `prop_abs` >= 0.957.  To meet this requirement, at least 95.7% of the data for the taxonomic group needs to come from visits where the species of interest was not recorded.  This is equivalent to 23 additional visits for every 1 visit where the species of interest was recorded.
 
-To be classisified as worth running a model:
+To be classified as worth running a model:
 
 After removing all data from sites which never saw a repeat visit in subsequent year for any species within the taxonomic group (see *Input Data Requirement*):
 
@@ -1249,11 +1223,9 @@ The recall/sensitivity/true positive rate (TP/(TP+FN)) is `r round(TP_aspire*100
 
 The specificity/true negative rate (TN/(TN+FP)) is `r round(TN_aspire*100/(TN_aspire+FP_aspire),1)`%, meaning `r round(TN_aspire*100/(TN_aspire+FP_aspire),1)`% of all datasets which would NOT produce a good model are classified as bad (compare with `r round(TN*100/(TN+FP),1)`% for the first decision tree).
 
-This decision tree is shown on the below plot:
-
 #### 1:10 Good:bad tree - bare minimum to try running a model
 
-The decision tree below is with a 1:10 good:bad ratio i.e. it is 10x more important to correctly classify bad models as bad  This means that any models which are classified as bad are very likely to be bad, while a model classified as good may or may not be actually good.  As such, this decision tree can be considered a bare minimum threshold.
+The decision tree below (Figure 18) is with a 1:10 good:bad ratio i.e. it is 10x more important to correctly classify bad models as bad  This means that any models which are classified as bad are very likely to be bad, while a model classified as good may or may not be actually good.  As such, this decision tree can be considered a bare minimum threshold.
 
 In testing, it was found that trees using all variables, P90 and prop_abs and just P90 produced similar sensitivity and specificity scores.  For simplicity, just P90 was used for this tree.
 
@@ -1271,6 +1243,7 @@ ev_trees <- list(ev,ev_aspire,ev_bm)
 names(ev_trees) <- c('ev','ev_aspire','ev_bm')
 save(x = ev_trees, file = 'ev_trees.Rdata')
 ```
+
 ```{r load_badtree, fig.cap='Decision tree for aspirational targets'}
 ev_bm <- ev_trees$ev_bm
 ev_bm
@@ -1287,9 +1260,7 @@ FN_bm <- sum(predict(ev_bm)!=trendsData$model_good & predict(ev_bm)=='bad')
 
 The sensitivity is `r round(TP_bm*100/(TP_bm+FN_bm),1)`%, while the specificity is `r round(TN_bm*100/(TN_bm+FP_bm),1)`%.
 
-As can be seen in the sensitivity and specificity scores above, this model creates a large number of false positives but a very low number of false negatives.  Therefore, if a dataset does not meet this very low threshold of P90 >= 1.4, it will almost certainly not result in a good model.  The only exceptions to this rule are likely to be the rarest of species with a rich taxonomic dataset.
-
-\pagebreak
+As can be seen in the sensitivity and specificity scores, this model creates a large number of false positives but a very low number of false negatives.  Therefore, if a dataset does not meet this very low threshold of P90 >= 1.4, it will almost certainly not result in a good model.  The only exceptions to this rule are likely to be the rarest of species with a rich taxonomic dataset.
 
 ```{r disp_sensspec_table, echo=FALSE}
 # Display the sensitivity and specificity scores
@@ -1308,7 +1279,7 @@ sens_spec %>%
 
 A table of the sensitivity and specificity scores for these decision trees is shown in Table 3.
 
-All these decision trees can be plotted on the same graph.  This is shown below.  All data points below the lines are predicted to not produce a good model.  Those models coloured blue did produce a good model, those below did not.
+All these decision trees can be plotted on the same graph (Figure 19).  All data points below the lines are predicted to not produce a good model.  Those models coloured blue did produce a good model, those below did not.
 
 ```{r plot_decision_trees_all, echo=FALSE, fig.cap = "The results of the decision trees with P90 on a log-scale, and prop_abs on a logit scale"}
 df_aspire <- data.frame(x = c(.01,rep(.987,2),.99999,
@@ -1343,9 +1314,9 @@ The Base model is a good balance between these two.
 
 #### Applying the decision tree to all the data
 
-In order to apply the decision trees to the data, including species and datasets for which we do not currently have a model, the function below creates a new parameter `data_good` which returns `bad` if the data are likely to produce a bad model, and `good` if the data are likely to produce a good model
+In order to apply the decision trees to the data, including species and datasets for which we do not currently have a model, a function was written creating a new parameter `data_good` which returns `bad` if the data are likely to produce a bad model, and `good` if the data are likely to produce a good model
 
-```{r calc_bad_fn}
+```{r calc_bad_fn, echo = FALSE}
 calc_bad <- function(df){
   df$Node1 <- df$prop_abs>=.987
   df$Node2 <- df$P90>=4.3
@@ -1375,13 +1346,11 @@ calc_bad <- function(df){
 trendsData <- calc_bad(trendsData)
 ```
 
-\pagebreak
-
 ## More investigation about the parameters in the decision tree
 
-### The relationship between P90 and P50
+### The relationship between P90 and median
 
-One of the possible concerns in applying this more widely is that while we found that P90 was an important parameter in the decision tree, it could also be strongly correlated with P50 (i.e. the median number of visits per year). We note that we have good prior reasons for thinking that P90 is useful (because it allows good estimation of detection), but here we test the relationship between the two.
+One of the possible concerns in applying this more widely is that while we found that P90 was an important parameter in the decision tree, it could also be strongly correlated with median number of visits per year. We note that we have good prior reasons for thinking that P90 is useful (because it allows good estimation of detection), but here we test the relationship between the two.  They are plotted together in Figure 20.
 
 ```{r plot.median.v.P90, echo=FALSE, fig.cap="This graph shows that there is a linear trend of the P50 against the P90, so although the P90 represents the best years in the dataset (and this is indeed a better predictor of the adequacy of the data than P50) this is broadly related to the median years. Over the range of the bulk of these data (i.e. up to median = 100) the P90 is two to three times greater than the median"}
 
@@ -1415,13 +1384,16 @@ plot <- ggplot(data = trendsData) +
 plot
 ```
 
+
+\pagebreak
+
 ### The relationship between precision and P90
 
 We have used a decision tree to model when the data are minimal adequate. However, does more data automatically mean better trends?
 
-One way to answer this is to model the lower limit of P90 against mean year precision. This can be done using quantile regression
+One way to answer this is to model the lower limit of P90 against mean year precision. This can be done using quantile regression, and the resulting plot is shown in Figure 21.
 
-```{r p90_by_precision}
+```{r p90_by_precision, echo=FALSE}
 
 trendsData.p90.7_4 <- subset(trendsData, P90>7.4)
 
@@ -1436,7 +1408,7 @@ segment.ys <-
               newdata = data.frame('P90' = c(7.4,
                                              max(trendsData.p90.7_4$P90)))))
 ```
-```{r plot_P90_by_precision, echo=FALSE, fig.cap="This shows that after a cut-off of P90 > 7.4 (the higher of the P90 cut-offs from the best guess decision tree), the more data there are (represented here by the increase in P90) the better the precision on the resulting occupancy model. The line represents the quantile regression through the 5th percentile.  This shows that precision can be high with low P90, but the lowest possible precision is higher with higher P90, i.e. more data"}
+```{r plot_P90_by_precision, echo=FALSE, fig.cap="Plot of mean year precision against P90.  This shows that after a cut-off of P90 > 7.4 (the higher of the P90 cut-offs from the best guess decision tree), the more data there are (represented here by the increase in P90) the better the precision on the resulting occupancy model. The line represents the quantile regression through the 5th percentile.  This shows that precision can be high with low P90, but the lowest possible precision is higher with higher P90, i.e. more data"}
 plot <- ggplot() +
   geom_point(aes(x = trendsData$P90,
                  y = trendsData$mean_year_precision,
@@ -1469,9 +1441,9 @@ Based on the work above, we can estimate how many species we can model for taxa 
 
 #### Extracting butterfly and moth data
 
-Before estimating how many species we can model, the data for the moth and butterfly records can be extracted and added to the metric output data table.  Just the metrics which came out from the decision trees will be included in this extraction, so it runs much faster than the earlier data extraction.
+Before estimating how many species we can model, the data for the moth and butterfly records was extracted and added to the metric output data table.  Just the metrics which came out from the decision trees were included in this extraction, so it ran much faster than the earlier data extraction.
 
-```{r butterfly_moth, eval=FALSE}
+```{r butterfly_moth, eval=FALSE, echo = FALSE}
 # Location of the jasmin butterfly and moth data
 jasmin <- file.path('W:/PYWELL_SHARED/Pywell Projects/BRC/Mark Logie/TSDA/Jasmin_data')
 data_files <- list.files(jasmin,full.names = TRUE)
@@ -1547,17 +1519,18 @@ RM <- RM[,colnames(RM) %in% colnames(master)]
 master <- master[,colnames(master) %in% colnames(RM)]
 
 master <- rbind(RM, master)
+```
 
+```{r butterfly_moth_write, eval=FALSE}
 write.csv(master, file = 'Results/metrics/ALL_combinedRawMetrics.csv',
           row.names = FALSE)
 ```
 
 #### Plotting the data
 
-In order to plot the taxa data, functions are written to plot the graphs when given an input data frame.  The functions for running this are below.
+In order to plot the taxa data, functions were written to plot the graphs when given an input data frame.
 
-```{r plotnumtaxa}
-
+```{r plotnumtaxa, echo=FALSE}
 # Extract raw data metrics, as we want to look at all species, not just those that we had matching posterior data for
 RM <- read.csv('Results/metrics/ALL_combinedRawMetrics.csv') 
 # Remove all last 10 yr data
@@ -1666,22 +1639,21 @@ stack_taxa <- function(df,prefix=NULL){
 RM <- calc_bad(RM)
 ```
 
+To provide a benchmark, below are three plots for all taxa for all UK data.
 
-\pagebreak
-To provide a benchmark, below are two plots for all taxa for all UK data.  The first graphs shows absolute values, while the second shows the proportion of species for each taxonomic group.
+* Absolute number of species within each group which can be modelled (Figure 22)
+* Proportion of species for each group which can be modelled (Figure 23)
+* Proportion of species for each group which pass the aspirational target (Figure 24)
+
 
 ```{r RM_basic,fig.cap='Plot of number of species which can be modelled, split by taxonomic group.  Blue shows species which can be modelled, red those which cannot.  Grey are those for which there is no data, due to there being no records which meet the requirement of coming from sites with repeat visits in any subsequent years.'}
 num_spec(RM) %>% stack_taxa()
 ```
 
-
-\pagebreak
 ```{r RM_prop,fig.cap='Plot of number of species which can be modelled, as a proportion of the total number of species for each taxonomic group.'}
 num_spec(RM,proportional=TRUE) %>% stack_taxa()
 ```
 
-
-\pagebreak
 ```{r RM_asp,fig.cap='Plot of number of species which can be modelled using the aspirational target.  As this is the aspirational target, the number of species which can be modelled is lower'}
 # Plot aspirational graph
 num_spec(RM,aspirational=TRUE,proportional=TRUE) %>%
@@ -1695,7 +1667,7 @@ num_spec(RM,aspirational=TRUE,proportional=TRUE) %>%
 
 The possible habitats are shown in Table 4.
 
-```{r disp_hab_table}
+```{r disp_hab_table, echo =FALSE}
 # Display the list of possible habitats
 hab_list <- read.csv('Habitat/Habitat_List.csv')
 hab_list %>%
@@ -1704,14 +1676,13 @@ hab_list %>%
   column_spec(2, width = "8cm")
 ```
 
-
 To calculate the raw metrics for each habitat, the squares in the UK all need to be assigned to a habitat.  To do so, a habitat datafile is read in and the range of percentage cover for each habitat is extracted.  This produces a list of coverage for each habitat such as:
 
 * Habitat: BLW; Coverage: 1%, 1%, 2%, 3% ... 95%, 98%, 99%
 
 From this list, the median coverage for each habitat is calculated.  Each square in the UK which has above this median coverage is assigned to that habitat.  Therefore it is possible for a square to contain multiple habitats or not represent any habitat.
 
-```{r extract_hab_values, eval=FALSE}
+```{r extract_hab_values, eval=FALSE, echo=FALSE}
 # Read in land habitat coverage data file
 UK_land <- readRDS(file.path('./Habitat/UK_land.rds'))
 UK_land_GR <- UK_land
@@ -1737,11 +1708,8 @@ quants <-
   }))
 ```
 
-
-Now calculate the metrics for each habitat
-
-
-```{r calc_hab_metrics, eval=FALSE}
+```{r calc_hab_metrics, eval=FALSE, echo=FALSE}
+# Now calculate the metrics for each habitat
 hab_names <- colnames(UK_land[,3:ncol(UK_land)])
 for(data_file in data_files){
   formatted_data <- dataPrep(data_file)
@@ -1817,13 +1785,15 @@ for(i in file_list){
   tmp <- read.csv(i)
   td <- rbind(td,tmp)
 }
+```
 
+```{r write_hab_metrics_file, eval=FALSE}
 write.csv(x = td, file.path('./Habitat/HabMetrics/ALL_habMetrics.csv'))
 ```
 
-Now calculate the metrics for butterflies in moths.  These are formatted differently and only the basic metrics are extracted, to save computational power.
+The metrics for butterflies and moths also needed to be calculated, in a separate function.  These are formatted differently so only the basic metrics were extracted, to save computational power.
 
-```{r butterfly_hab,eval=FALSE}
+```{r butterfly_hab,eval=FALSE, echo=FALSE}
 for(data_file in list.files(jasmin,full.names = TRUE)){
   cat('Starting', basename(data_file))
   load(data_file)
@@ -1899,29 +1869,36 @@ habRM <- read.csv('./Habitat/HabMetrics/ALL_habMetrics.csv')
 # Remove all metrics not required
 habRM <- habRM[,colnames(habRM) %in% colnames(master)]
 td <- rbind(habRM,master)
+```
 
+```{r write_all_combined_metrics, eval = FALSE}
 write.csv(x = td, file.path('./Habitat/HabMetrics/ALL_combinedHabMetrics.csv'))
 ```
 
-The raw metrics for each habitat have now been calculated from the raw data.  Using these data, the proportion of species which can be modelled for each habitat can be assessed.
+Using all these data, the proportion of species which can be modelled for each habitat can be assessed.
 
 ```{r habmetrics}
 # Read in the habitat raw metrics
 RM_hab <-
   read.csv(file = file.path('Habitat/HabMetrics/ALL_combinedHabMetrics.csv'))
 ```
+
 ```{r calculate_habitats}
 # Calculate which datasets are likely to produce good or bad models
 RM_hab <- calc_bad(RM_hab)
 ```
+
+Below are two sample graphs for two habitats:
+
+* Proportion of species which can be modelled using only Broad-Leaf Woodland data (Figure 25)
+* Proportion of species which can be modelled using only Coastal data (Figure 26)
+
 ```{r plot_BLW,fig.cap='Proportion of species which can be modelled in broad-leaf woodland'}
 # Plot up a sample graph for broad leaf woodland
 num_spec(RM_hab,habitat='BLW',proportional=TRUE) %>%
   stack_taxa(prefix='B-L Woodland')
 ```
 
-
-\pagebreak
 ```{r plot_coastal,fig.cap='Proportion of species which can be modelled in coastal habitats'}
 # And for coastal
 num_spec(RM_hab,habitat='C',proportional=TRUE) %>% stack_taxa(prefix='Coastal')
@@ -1932,9 +1909,9 @@ num_spec(RM_hab,habitat='C',proportional=TRUE) %>% stack_taxa(prefix='Coastal')
 
 ### By region
 
-The data can also be split by region.  Splitting by region is simpler than for habitat as all squares in the UK exist within a region which can be obtained from the NUTS lookup table.  The data is then subset by region and the metrics extracted for each of these regions.
+The data can also be split by region.  Splitting by region is simpler than for habitat as all squares in the UK exist within a region which can be obtained from the NUTS lookup table.  The data is then subset by region and the metrics extracted for each of these regions.  The available regions are shown in Table 5.
 
-```{r calc_metrics_region,eval=FALSE}
+```{r calc_metrics_region,eval=FALSE, echo=FALSE}
 regions <- read.csv(file.path('./Region/NUTS1_1km_dupsorted.csv'))
 regions <- regions[,c(2,4)]
 
@@ -1990,12 +1967,14 @@ file_list <- list.files(file.path('./Region/RegMetrics'),
 for(i in file_list){
   td <- rbind(td,read.csv(i))
 }
+```
+
+```{r write_all_reg_metrics,eval=FALSE}
 write.csv(x = td, file.path('./Region/RegMetrics/ALL_regMetrics.csv'))
 ```
 
-Now include the butterfly and moth data
-
-```{r butterfly_reg,eval=FALSE}
+```{r butterfly_reg,eval=FALSE, echo=FALSE}
+# The butterfly and moth data also needed to be calculated separately.
 for(data_file in list.files(jasmin,full.names = TRUE)){
   cat('Starting', basename(data_file))
   load(data_file)
@@ -2074,36 +2053,36 @@ td <- rbind(regRM,master)
 write.csv(x = td, file.path('./Region/RegMetrics/ALL_combinedRegMetrics.csv'))
 ```
 
-
-\pagebreak
-Now the data has been extracted, we can read in the region data file and query the data by region.  The available regions are shown in Table 5.  
-
-
 ```{r regionmetrics}
 # Read in the regional raw metrics
 RM_reg <-
   read.csv(file =  file.path('Region/RegMetrics/ALL_combinedRegMetrics.csv'))
+```
+
+```{r merge_regions, echo=FALSE}
 # Load the list of regions
 region_lookup <- read.csv(file = file.path('Region/NUTS_lookup.csv'))
 # Merge this lookup table with the raw data to allow it be queried by code
 RM_reg <- merge(RM_reg,region_lookup)
 # Calculate which datasets are likely to produce good or bad models
 RM_reg <- calc_bad(RM_reg)
-
 ```
 
-```{r regiontable}
+```{r regiontable, echo=FALSE}
 region_lookup %>% kable(caption = 'List of regions')
 ```
 
-\pagebreak
+Below are two sample graphs for two regions:
+
+* Proportion of species which can be modelled using only Scottish data (Figure 27)
+* Proportion of species which can be modelled using only Welsh data (Figure 28)
+
+
 ```{r plot_scotland,fig.cap='Proportion of species which can be modelled in Scotland'}
 # Plot up a sample graph for Scotland
 num_spec(RM_reg,region='Scotland',proportional=T) %>% stack_taxa(prefix='Scotland')
 ```
 
-
-\pagebreak
 ```{r plot_wales,fig.cap='Proportion of species which can be modelled in Wales'}
 # And for Wales
 num_spec(RM_reg,region='UKL',proportional=TRUE) %>% stack_taxa(prefix='Wales')
@@ -2116,4 +2095,8 @@ num_spec(RM_reg,region='UKL',proportional=TRUE) %>% stack_taxa(prefix='Wales')
 
 Previously it was difficult to predict from a dataset whether it was possible to produce an occupancy model with a useful level of precision.  This work has demonstrated that the criteria for making such an assessment are relatively simple and easy to apply to new datasets.
 
-With this tool, it can be estimated how many species we can model, not just in the UK as a whole, but for any region or habitat of interest within the UK.  The aspirational criteria also represent a target to aim for, to enable the modelling of any species of interest.
+With this decision tree (repeated below, Figure 29), it can be estimated how many species we can model, not just in the UK as a whole, but for any region or habitat of interest.  The aspirational criteria also represent a target to aim for, to enable the modelling of any species of interest.
+
+```{r plot_decision_tree_final, echo=FALSE, fig.cap = 'Best fit decision tree for deciding if a dataset is likely to produce an acceptable model'}
+plot(ev)
+```
