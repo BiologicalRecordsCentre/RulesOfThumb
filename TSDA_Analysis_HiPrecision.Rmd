@@ -1247,7 +1247,7 @@ ev_trees <- list(ev,ev_aspire,ev_bm)
 names(ev_trees) <- c('ev','ev_aspire','ev_bm')
 save(x = ev_trees, file = 'ev_trees_hi.Rdata')
 ```
-```{r load_badtree, fig.cap='Decision tree for aspirational targets'}
+```{r load_badtree, fig.cap='Decision tree for bare minimum targets'}
 ev_bm <- ev_trees$ev_bm
 ev_bm
 plot(ev_bm)
