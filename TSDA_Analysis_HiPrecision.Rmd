@@ -1,6 +1,6 @@
 ---
 title: "Rules of Thumb for Species Occupancy Models"
-author: "Mark Logie & Tom August"
+author: "Mark Logie, Tom August and Michael Pocock"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output:
   html_document:
