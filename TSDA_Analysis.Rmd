@@ -58,7 +58,7 @@ The metrics describe the data that we have for a species and can be used to pred
 * Considering all visits for the ‘taxonomic’ group in the dataset, the proportion of all visits that did not record the focal species [`prop_abs`]
 * Considering the visits for the ‘taxonomic’ group where the focal species was not observed, this is the proportion of visits with list length > 1 [`prop_abs_list`]*
 
-*Note: this variable is excluded in the final decision trees.  See 'Classifying the data: Examining the classification variables'
+*Note: this variable is excluded in the final decision trees.  See 'Examining the classification variables'
 
 ### Model quality metrics
 
@@ -873,9 +873,9 @@ Using both metrics is clearly better for splitting good and bad models, therefor
 * If the proportion of years converged is >= 0.3437, the model will be classified as 'bad' if the mean year precision is < 60.2
 
 
-## Classifying the data
+## Examining the classification variables
 
-### Examining the classification variables
+### Taxonomic independence
 
 Before running the classifiers, it is important to determine whether or not any of the variables are highly taxa dependent.  If they are, they are much less generalisable across data sets.
 
@@ -1086,9 +1086,9 @@ trendsData <- trendsData %>% filter(mean_means > 0.05)
 
 \pagebreak
 
-### Classification trees
+## Classifying the data
 
-#### Equally weighted decision tree
+### Equally weighted decision tree
 
 Using the split in the models between 'good' and 'bad', you can create a classification tree that attempts to use the variables we have extracted to partition the data to the best of its ability using a decision tree.
 
@@ -1168,7 +1168,7 @@ ggplot(data = trendsData, aes(x = prop_abs, y = P90, col = as.factor(model_good)
 
 \pagebreak
 
-#### 10:1 Good:bad tree - Aspirational Target
+### 10:1 Good:bad tree - Aspirational Target
 
 The decision tree is computed again twice more.  In these models, the penalty for misclassifying good models as bad, or vice versa, is varied.
 
@@ -1223,7 +1223,7 @@ The recall/sensitivity/true positive rate (TP/(TP+FN)) is `r round(TP_aspire*100
 
 The specificity/true negative rate (TN/(TN+FP)) is `r round(TN_aspire*100/(TN_aspire+FP_aspire),1)`%, meaning `r round(TN_aspire*100/(TN_aspire+FP_aspire),1)`% of all datasets which would NOT produce a good model are classified as bad (compare with `r round(TN*100/(TN+FP),1)`% for the first decision tree).
 
-#### 1:10 Good:bad tree - bare minimum to try running a model
+### 1:10 Good:bad tree - bare minimum to try running a model
 
 The decision tree below (Figure 18) is with a 1:10 good:bad ratio i.e. it is 10x more important to correctly classify bad models as bad  This means that any models which are classified as bad are very likely to be bad, while a model classified as good may or may not be actually good.  As such, this decision tree can be considered a bare minimum threshold.
 
@@ -1312,7 +1312,7 @@ Similarly, the bare minimum tree line is very easy to get above (it is highly se
 
 The Base model is a good balance between these two.
 
-#### Applying the decision tree to all the data
+### Applying the decision tree to all the data
 
 In order to apply the decision trees to the data, including species and datasets for which we do not currently have a model, a function was written creating a new parameter `data_good` which returns `bad` if the data are likely to produce a bad model, and `good` if the data are likely to produce a good model
 
