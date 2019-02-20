@@ -1,0 +1,749 @@
+Taxa,hab,num_spec
+Ants,BLW,54
+Ants,CWL,48
+Ants,A,45
+Ants,IG,50
+Ants,FW,46
+Ants,SNG,41
+Ants,MHB,37
+Ants,C,42
+Ants,BU,59
+Ants,UK,60
+AquaticBugs,BLW,86
+AquaticBugs,CWL,75
+AquaticBugs,A,79
+AquaticBugs,IG,82
+AquaticBugs,FW,78
+AquaticBugs,SNG,77
+AquaticBugs,MHB,66
+AquaticBugs,C,72
+AquaticBugs,BU,83
+AquaticBugs,UK,92
+Bees,BLW,234
+Bees,CWL,212
+Bees,A,230
+Bees,IG,232
+Bees,FW,219
+Bees,SNG,216
+Bees,MHB,192
+Bees,C,224
+Bees,BU,236
+Bees,UK,242
+Bryophytes,BLW,844
+Bryophytes,CWL,811
+Bryophytes,A,681
+Bryophytes,IG,819
+Bryophytes,FW,781
+Bryophytes,SNG,898
+Bryophytes,MHB,890
+Bryophytes,C,694
+Bryophytes,BU,782
+Bryophytes,UK,999
+Carabids,BLW,325
+Carabids,CWL,283
+Carabids,A,308
+Carabids,IG,314
+Carabids,FW,298
+Carabids,SNG,280
+Carabids,MHB,226
+Carabids,C,276
+Carabids,BU,326
+Carabids,UK,346
+Centipedes,BLW,47
+Centipedes,CWL,33
+Centipedes,A,40
+Centipedes,IG,46
+Centipedes,FW,34
+Centipedes,SNG,35
+Centipedes,MHB,28
+Centipedes,C,41
+Centipedes,BU,45
+Centipedes,UK,51
+Craneflies,BLW,331
+Craneflies,CWL,303
+Craneflies,A,299
+Craneflies,IG,327
+Craneflies,FW,287
+Craneflies,SNG,290
+Craneflies,MHB,267
+Craneflies,C,223
+Craneflies,BU,312
+Craneflies,UK,342
+Dragonflies,BLW,52
+Dragonflies,CWL,47
+Dragonflies,A,47
+Dragonflies,IG,52
+Dragonflies,FW,49
+Dragonflies,SNG,46
+Dragonflies,MHB,42
+Dragonflies,C,46
+Dragonflies,BU,49
+Dragonflies,UK,54
+E&D,BLW,621
+E&D,CWL,531
+E&D,A,564
+E&D,IG,601
+E&D,FW,530
+E&D,SNG,520
+E&D,MHB,410
+E&D,C,434
+E&D,BU,595
+E&D,UK,650
+Ephemeroptera,BLW,45
+Ephemeroptera,CWL,43
+Ephemeroptera,A,43
+Ephemeroptera,IG,44
+Ephemeroptera,FW,40
+Ephemeroptera,SNG,38
+Ephemeroptera,MHB,39
+Ephemeroptera,C,26
+Ephemeroptera,BU,45
+Ephemeroptera,UK,45
+Fish,BLW,56
+Fish,CWL,42
+Fish,A,55
+Fish,IG,55
+Fish,FW,52
+Fish,SNG,45
+Fish,MHB,25
+Fish,C,40
+Fish,BU,60
+Fish,UK,67
+FungusGnats,BLW,486
+FungusGnats,CWL,444
+FungusGnats,A,404
+FungusGnats,IG,460
+FungusGnats,FW,381
+FungusGnats,SNG,412
+FungusGnats,MHB,393
+FungusGnats,C,281
+FungusGnats,BU,434
+FungusGnats,UK,521
+Gelechiids,BLW,139
+Gelechiids,CWL,114
+Gelechiids,A,127
+Gelechiids,IG,139
+Gelechiids,FW,119
+Gelechiids,SNG,105
+Gelechiids,MHB,86
+Gelechiids,C,118
+Gelechiids,BU,144
+Gelechiids,UK,150
+Hoverflies,BLW,266
+Hoverflies,CWL,256
+Hoverflies,A,249
+Hoverflies,IG,259
+Hoverflies,FW,245
+Hoverflies,SNG,245
+Hoverflies,MHB,234
+Hoverflies,C,232
+Hoverflies,BU,259
+Hoverflies,UK,272
+HypogeanCrustacea,BLW,9
+HypogeanCrustacea,CWL,8
+HypogeanCrustacea,A,9
+HypogeanCrustacea,IG,9
+HypogeanCrustacea,FW,9
+HypogeanCrustacea,SNG,9
+HypogeanCrustacea,MHB,8
+HypogeanCrustacea,C,6
+HypogeanCrustacea,BU,8
+HypogeanCrustacea,UK,9
+Ladybirds,BLW,47
+Ladybirds,CWL,44
+Ladybirds,A,46
+Ladybirds,IG,48
+Ladybirds,FW,47
+Ladybirds,SNG,40
+Ladybirds,MHB,37
+Ladybirds,C,41
+Ladybirds,BU,49
+Ladybirds,UK,50
+LeafSeedBeetles,BLW,251
+LeafSeedBeetles,CWL,215
+LeafSeedBeetles,A,248
+LeafSeedBeetles,IG,255
+LeafSeedBeetles,FW,236
+LeafSeedBeetles,SNG,215
+LeafSeedBeetles,MHB,155
+LeafSeedBeetles,C,200
+LeafSeedBeetles,BU,259
+LeafSeedBeetles,UK,272
+Lichens,BLW,1755
+Lichens,CWL,1599
+Lichens,A,1288
+Lichens,IG,1620
+Lichens,FW,1445
+Lichens,SNG,1669
+Lichens,MHB,1717
+Lichens,C,1309
+Lichens,BU,1399
+Lichens,UK,2130
+Millipedes,BLW,58
+Millipedes,CWL,41
+Millipedes,A,51
+Millipedes,IG,55
+Millipedes,FW,49
+Millipedes,SNG,45
+Millipedes,MHB,33
+Millipedes,C,44
+Millipedes,BU,55
+Millipedes,UK,58
+Molluscs,BLW,234
+Molluscs,CWL,187
+Molluscs,A,226
+Molluscs,IG,242
+Molluscs,FW,209
+Molluscs,SNG,197
+Molluscs,MHB,166
+Molluscs,C,194
+Molluscs,BU,242
+Molluscs,UK,262
+Neuropterida,BLW,76
+Neuropterida,CWL,63
+Neuropterida,A,65
+Neuropterida,IG,70
+Neuropterida,FW,57
+Neuropterida,SNG,56
+Neuropterida,MHB,45
+Neuropterida,C,42
+Neuropterida,BU,74
+Neuropterida,UK,81
+Orthoptera,BLW,27
+Orthoptera,CWL,24
+Orthoptera,A,27
+Orthoptera,IG,27
+Orthoptera,FW,25
+Orthoptera,SNG,23
+Orthoptera,MHB,23
+Orthoptera,C,26
+Orthoptera,BU,27
+Orthoptera,UK,28
+PlantBugs,BLW,392
+PlantBugs,CWL,338
+PlantBugs,A,370
+PlantBugs,IG,378
+PlantBugs,FW,345
+PlantBugs,SNG,330
+PlantBugs,MHB,250
+PlantBugs,C,303
+PlantBugs,BU,392
+PlantBugs,UK,413
+Plecoptera,BLW,31
+Plecoptera,CWL,28
+Plecoptera,A,30
+Plecoptera,IG,31
+Plecoptera,FW,30
+Plecoptera,SNG,31
+Plecoptera,MHB,31
+Plecoptera,C,25
+Plecoptera,BU,30
+Plecoptera,UK,32
+RoveBeetles,BLW,690
+RoveBeetles,CWL,430
+RoveBeetles,A,630
+RoveBeetles,IG,641
+RoveBeetles,FW,493
+RoveBeetles,SNG,356
+RoveBeetles,MHB,383
+RoveBeetles,C,243
+RoveBeetles,BU,668
+RoveBeetles,UK,795
+ShieldBugs,BLW,63
+ShieldBugs,CWL,50
+ShieldBugs,A,59
+ShieldBugs,IG,62
+ShieldBugs,FW,55
+ShieldBugs,SNG,46
+ShieldBugs,MHB,36
+ShieldBugs,C,52
+ShieldBugs,BU,63
+ShieldBugs,UK,66
+SoldierBeetles,BLW,56
+SoldierBeetles,CWL,55
+SoldierBeetles,A,53
+SoldierBeetles,IG,53
+SoldierBeetles,FW,51
+SoldierBeetles,SNG,47
+SoldierBeetles,MHB,46
+SoldierBeetles,C,40
+SoldierBeetles,BU,56
+SoldierBeetles,UK,59
+Soldierflies,BLW,143
+Soldierflies,CWL,132
+Soldierflies,A,140
+Soldierflies,IG,142
+Soldierflies,FW,127
+Soldierflies,SNG,115
+Soldierflies,MHB,96
+Soldierflies,C,110
+Soldierflies,BU,140
+Soldierflies,UK,148
+Spiders,BLW,576
+Spiders,CWL,528
+Spiders,A,538
+Spiders,IG,561
+Spiders,FW,530
+Spiders,SNG,512
+Spiders,MHB,483
+Spiders,C,488
+Spiders,BU,573
+Spiders,UK,622
+Trichoptera,BLW,178
+Trichoptera,CWL,168
+Trichoptera,A,159
+Trichoptera,IG,176
+Trichoptera,FW,169
+Trichoptera,SNG,171
+Trichoptera,MHB,157
+Trichoptera,C,130
+Trichoptera,BU,170
+Trichoptera,UK,186
+Wasps,BLW,260
+Wasps,CWL,227
+Wasps,A,244
+Wasps,IG,252
+Wasps,FW,239
+Wasps,SNG,210
+Wasps,MHB,200
+Wasps,C,202
+Wasps,BU,256
+Wasps,UK,263
+Weevils,BLW,573
+Weevils,CWL,482
+Weevils,A,545
+Weevils,IG,556
+Weevils,FW,507
+Weevils,SNG,464
+Weevils,MHB,352
+Weevils,C,463
+Weevils,BU,580
+Weevils,UK,617
+Butterflies,BLW,58
+Butterflies,CWL,57
+Butterflies,A,57
+Butterflies,IG,58
+Butterflies,FW,57
+Butterflies,SNG,57
+Butterflies,MHB,57
+Butterflies,C,57
+Butterflies,BU,57
+Butterflies,UK,59
+Moths,BLW,861
+Moths,CWL,852
+Moths,A,838
+Moths,IG,849
+Moths,FW,827
+Moths,SNG,827
+Moths,MHB,817
+Moths,C,820
+Moths,BU,856
+Moths,UK,895
+Ants,Scotland,24
+Ants,North East (England),11
+Ants,North West (England),19
+Ants,Yorkshire and The Humber,20
+Ants,East Midlands (England),26
+Ants,Wales,37
+Ants,West Midlands (England),27
+Ants,South West (England),49
+Ants,South East (England),50
+Ants,East of England,40
+Ants,London,35
+Ants,Northern Ireland,0
+AquaticBugs,Scotland,59
+AquaticBugs,North East (England),49
+AquaticBugs,North West (England),60
+AquaticBugs,Yorkshire and The Humber,65
+AquaticBugs,East Midlands (England),67
+AquaticBugs,Wales,68
+AquaticBugs,West Midlands (England),49
+AquaticBugs,South West (England),65
+AquaticBugs,South East (England),69
+AquaticBugs,East of England,70
+AquaticBugs,London,45
+AquaticBugs,Northern Ireland,0
+Bees,Scotland,104
+Bees,North East (England),85
+Bees,North West (England),118
+Bees,Yorkshire and The Humber,133
+Bees,East Midlands (England),147
+Bees,Wales,172
+Bees,West Midlands (England),176
+Bees,South West (England),217
+Bees,South East (England),226
+Bees,East of England,194
+Bees,London,173
+Bees,Northern Ireland,0
+Bryophytes,Scotland,864
+Bryophytes,North East (England),519
+Bryophytes,North West (England),653
+Bryophytes,Yorkshire and The Humber,546
+Bryophytes,East Midlands (England),538
+Bryophytes,Wales,766
+Bryophytes,West Midlands (England),540
+Bryophytes,South West (England),652
+Bryophytes,South East (England),522
+Bryophytes,East of England,425
+Bryophytes,London,270
+Bryophytes,Northern Ireland,0
+Carabids,Scotland,179
+Carabids,North East (England),151
+Carabids,North West (England),208
+Carabids,Yorkshire and The Humber,214
+Carabids,East Midlands (England),222
+Carabids,Wales,243
+Carabids,West Midlands (England),204
+Carabids,South West (England),256
+Carabids,South East (England),294
+Carabids,East of England,266
+Carabids,London,127
+Carabids,Northern Ireland,0
+Centipedes,Scotland,30
+Centipedes,North East (England),21
+Centipedes,North West (England),27
+Centipedes,Yorkshire and The Humber,25
+Centipedes,East Midlands (England),27
+Centipedes,Wales,36
+Centipedes,West Midlands (England),29
+Centipedes,South West (England),46
+Centipedes,South East (England),37
+Centipedes,East of England,35
+Centipedes,London,27
+Centipedes,Northern Ireland,0
+Craneflies,Scotland,272
+Craneflies,North East (England),175
+Craneflies,North West (England),240
+Craneflies,Yorkshire and The Humber,262
+Craneflies,East Midlands (England),220
+Craneflies,Wales,283
+Craneflies,West Midlands (England),252
+Craneflies,South West (England),261
+Craneflies,South East (England),259
+Craneflies,East of England,212
+Craneflies,London,135
+Craneflies,Northern Ireland,0
+Dragonflies,Scotland,34
+Dragonflies,North East (England),25
+Dragonflies,North West (England),35
+Dragonflies,Yorkshire and The Humber,33
+Dragonflies,East Midlands (England),31
+Dragonflies,Wales,37
+Dragonflies,West Midlands (England),35
+Dragonflies,South West (England),39
+Dragonflies,South East (England),47
+Dragonflies,East of England,39
+Dragonflies,London,35
+Dragonflies,Northern Ireland,0
+E&D,Scotland,406
+E&D,North East (England),256
+E&D,North West (England),359
+E&D,Yorkshire and The Humber,447
+E&D,East Midlands (England),228
+E&D,Wales,504
+E&D,West Midlands (England),373
+E&D,South West (England),503
+E&D,South East (England),481
+E&D,East of England,469
+E&D,London,269
+E&D,Northern Ireland,0
+Ephemeroptera,Scotland,37
+Ephemeroptera,North East (England),32
+Ephemeroptera,North West (England),35
+Ephemeroptera,Yorkshire and The Humber,37
+Ephemeroptera,East Midlands (England),35
+Ephemeroptera,Wales,37
+Ephemeroptera,West Midlands (England),36
+Ephemeroptera,South West (England),40
+Ephemeroptera,South East (England),39
+Ephemeroptera,East of England,27
+Ephemeroptera,London,17
+Ephemeroptera,Northern Ireland,0
+Fish,Scotland,26
+Fish,North East (England),27
+Fish,North West (England),30
+Fish,Yorkshire and The Humber,38
+Fish,East Midlands (England),44
+Fish,Wales,36
+Fish,West Midlands (England),40
+Fish,South West (England),43
+Fish,South East (England),40
+Fish,East of England,49
+Fish,London,25
+Fish,Northern Ireland,0
+FungusGnats,Scotland,397
+FungusGnats,North East (England),200
+FungusGnats,North West (England),279
+FungusGnats,Yorkshire and The Humber,316
+FungusGnats,East Midlands (England),220
+FungusGnats,Wales,357
+FungusGnats,West Midlands (England),280
+FungusGnats,South West (England),377
+FungusGnats,South East (England),372
+FungusGnats,East of England,351
+FungusGnats,London,218
+FungusGnats,Northern Ireland,0
+Gelechiids,Scotland,76
+Gelechiids,North East (England),62
+Gelechiids,North West (England),78
+Gelechiids,Yorkshire and The Humber,85
+Gelechiids,East Midlands (England),86
+Gelechiids,Wales,96
+Gelechiids,West Midlands (England),80
+Gelechiids,South West (England),120
+Gelechiids,South East (England),124
+Gelechiids,East of England,116
+Gelechiids,London,84
+Gelechiids,Northern Ireland,0
+Hoverflies,Scotland,213
+Hoverflies,North East (England),173
+Hoverflies,North West (England),200
+Hoverflies,Yorkshire and The Humber,197
+Hoverflies,East Midlands (England),213
+Hoverflies,Wales,217
+Hoverflies,West Midlands (England),222
+Hoverflies,South West (England),238
+Hoverflies,South East (England),239
+Hoverflies,East of England,223
+Hoverflies,London,179
+Hoverflies,Northern Ireland,0
+HypogeanCrustacea,Scotland,1
+HypogeanCrustacea,North East (England),1
+HypogeanCrustacea,North West (England),2
+HypogeanCrustacea,Yorkshire and The Humber,4
+HypogeanCrustacea,East Midlands (England),4
+HypogeanCrustacea,Wales,7
+HypogeanCrustacea,West Midlands (England),3
+HypogeanCrustacea,South West (England),9
+HypogeanCrustacea,South East (England),7
+HypogeanCrustacea,East of England,6
+HypogeanCrustacea,London,6
+HypogeanCrustacea,Northern Ireland,0
+Ladybirds,Scotland,29
+Ladybirds,North East (England),22
+Ladybirds,North West (England),33
+Ladybirds,Yorkshire and The Humber,38
+Ladybirds,East Midlands (England),38
+Ladybirds,Wales,37
+Ladybirds,West Midlands (England),40
+Ladybirds,South West (England),40
+Ladybirds,South East (England),46
+Ladybirds,East of England,43
+Ladybirds,London,43
+Ladybirds,Northern Ireland,0
+LeafSeedBeetles,Scotland,116
+LeafSeedBeetles,North East (England),88
+LeafSeedBeetles,North West (England),140
+LeafSeedBeetles,Yorkshire and The Humber,188
+LeafSeedBeetles,East Midlands (England),182
+LeafSeedBeetles,Wales,181
+LeafSeedBeetles,West Midlands (England),191
+LeafSeedBeetles,South West (England),217
+LeafSeedBeetles,South East (England),243
+LeafSeedBeetles,East of England,210
+LeafSeedBeetles,London,123
+LeafSeedBeetles,Northern Ireland,0
+Lichens,Scotland,1925
+Lichens,North East (England),744
+Lichens,North West (England),837
+Lichens,Yorkshire and The Humber,610
+Lichens,East Midlands (England),641
+Lichens,Wales,1203
+Lichens,West Midlands (England),619
+Lichens,South West (England),1241
+Lichens,South East (England),866
+Lichens,East of England,742
+Lichens,London,309
+Lichens,Northern Ireland,0
+Millipedes,Scotland,42
+Millipedes,North East (England),29
+Millipedes,North West (England),34
+Millipedes,Yorkshire and The Humber,34
+Millipedes,East Midlands (England),35
+Millipedes,Wales,40
+Millipedes,West Midlands (England),31
+Millipedes,South West (England),43
+Millipedes,South East (England),50
+Millipedes,East of England,40
+Millipedes,London,35
+Millipedes,Northern Ireland,0
+Molluscs,Scotland,170
+Molluscs,North East (England),122
+Molluscs,North West (England),163
+Molluscs,Yorkshire and The Humber,174
+Molluscs,East Midlands (England),161
+Molluscs,Wales,182
+Molluscs,West Midlands (England),151
+Molluscs,South West (England),203
+Molluscs,South East (England),195
+Molluscs,East of England,195
+Molluscs,London,139
+Molluscs,Northern Ireland,0
+Neuropterida,Scotland,46
+Neuropterida,North East (England),36
+Neuropterida,North West (England),49
+Neuropterida,Yorkshire and The Humber,51
+Neuropterida,East Midlands (England),45
+Neuropterida,Wales,61
+Neuropterida,West Midlands (England),58
+Neuropterida,South West (England),43
+Neuropterida,South East (England),69
+Neuropterida,East of England,62
+Neuropterida,London,54
+Neuropterida,Northern Ireland,0
+Orthoptera,Scotland,9
+Orthoptera,North East (England),7
+Orthoptera,North West (England),13
+Orthoptera,Yorkshire and The Humber,18
+Orthoptera,East Midlands (England),17
+Orthoptera,Wales,18
+Orthoptera,West Midlands (England),16
+Orthoptera,South West (England),27
+Orthoptera,South East (England),27
+Orthoptera,East of England,22
+Orthoptera,London,17
+Orthoptera,Northern Ireland,0
+PlantBugs,Scotland,213
+PlantBugs,North East (England),126
+PlantBugs,North West (England),234
+PlantBugs,Yorkshire and The Humber,295
+PlantBugs,East Midlands (England),269
+PlantBugs,Wales,260
+PlantBugs,West Midlands (England),292
+PlantBugs,South West (England),297
+PlantBugs,South East (England),378
+PlantBugs,East of England,332
+PlantBugs,London,265
+PlantBugs,Northern Ireland,0
+Plecoptera,Scotland,31
+Plecoptera,North East (England),24
+Plecoptera,North West (England),29
+Plecoptera,Yorkshire and The Humber,29
+Plecoptera,East Midlands (England),26
+Plecoptera,Wales,29
+Plecoptera,West Midlands (England),26
+Plecoptera,South West (England),25
+Plecoptera,South East (England),20
+Plecoptera,East of England,16
+Plecoptera,London,3
+Plecoptera,Northern Ireland,0
+RoveBeetles,Scotland,296
+RoveBeetles,North East (England),179
+RoveBeetles,North West (England),182
+RoveBeetles,Yorkshire and The Humber,263
+RoveBeetles,East Midlands (England),606
+RoveBeetles,Wales,262
+RoveBeetles,West Midlands (England),306
+RoveBeetles,South West (England),262
+RoveBeetles,South East (England),369
+RoveBeetles,East of England,354
+RoveBeetles,London,39
+RoveBeetles,Northern Ireland,0
+ShieldBugs,Scotland,13
+ShieldBugs,North East (England),13
+ShieldBugs,North West (England),21
+ShieldBugs,Yorkshire and The Humber,31
+ShieldBugs,East Midlands (England),34
+ShieldBugs,Wales,35
+ShieldBugs,West Midlands (England),33
+ShieldBugs,South West (England),56
+ShieldBugs,South East (England),59
+ShieldBugs,East of England,52
+ShieldBugs,London,43
+ShieldBugs,Northern Ireland,0
+SoldierBeetles,Scotland,35
+SoldierBeetles,North East (England),29
+SoldierBeetles,North West (England),35
+SoldierBeetles,Yorkshire and The Humber,41
+SoldierBeetles,East Midlands (England),46
+SoldierBeetles,Wales,44
+SoldierBeetles,West Midlands (England),43
+SoldierBeetles,South West (England),48
+SoldierBeetles,South East (England),50
+SoldierBeetles,East of England,41
+SoldierBeetles,London,32
+SoldierBeetles,Northern Ireland,0
+Soldierflies,Scotland,80
+Soldierflies,North East (England),61
+Soldierflies,North West (England),87
+Soldierflies,Yorkshire and The Humber,85
+Soldierflies,East Midlands (England),82
+Soldierflies,Wales,103
+Soldierflies,West Midlands (England),85
+Soldierflies,South West (England),112
+Soldierflies,South East (England),128
+Soldierflies,East of England,107
+Soldierflies,London,71
+Soldierflies,Northern Ireland,0
+Spiders,Scotland,413
+Spiders,North East (England),257
+Spiders,North West (England),395
+Spiders,Yorkshire and The Humber,390
+Spiders,East Midlands (England),401
+Spiders,Wales,452
+Spiders,West Midlands (England),416
+Spiders,South West (England),492
+Spiders,South East (England),511
+Spiders,East of England,484
+Spiders,London,344
+Spiders,Northern Ireland,0
+Trichoptera,Scotland,150
+Trichoptera,North East (England),115
+Trichoptera,North West (England),151
+Trichoptera,Yorkshire and The Humber,143
+Trichoptera,East Midlands (England),134
+Trichoptera,Wales,154
+Trichoptera,West Midlands (England),150
+Trichoptera,South West (England),142
+Trichoptera,South East (England),138
+Trichoptera,East of England,123
+Trichoptera,London,68
+Trichoptera,Northern Ireland,0
+Wasps,Scotland,92
+Wasps,North East (England),67
+Wasps,North West (England),111
+Wasps,Yorkshire and The Humber,176
+Wasps,East Midlands (England),147
+Wasps,Wales,150
+Wasps,West Midlands (England),170
+Wasps,South West (England),208
+Wasps,South East (England),249
+Wasps,East of England,198
+Wasps,London,184
+Wasps,Northern Ireland,0
+Weevils,Scotland,257
+Weevils,North East (England),180
+Weevils,North West (England),329
+Weevils,Yorkshire and The Humber,316
+Weevils,East Midlands (England),373
+Weevils,Wales,418
+Weevils,West Midlands (England),381
+Weevils,South West (England),477
+Weevils,South East (England),536
+Weevils,East of England,485
+Weevils,London,308
+Weevils,Northern Ireland,0
+Butterflies,Scotland,37
+Butterflies,North East (England),35
+Butterflies,North West (England),45
+Butterflies,Yorkshire and The Humber,44
+Butterflies,East Midlands (England),48
+Butterflies,Wales,44
+Butterflies,West Midlands (England),46
+Butterflies,South West (England),52
+Butterflies,South East (England),50
+Butterflies,East of England,47
+Butterflies,London,42
+Butterflies,Northern Ireland,0
+Moths,Scotland,588
+Moths,North East (England),549
+Moths,North West (England),624
+Moths,Yorkshire and The Humber,627
+Moths,East Midlands (England),653
+Moths,Wales,681
+Moths,West Midlands (England),662
+Moths,South West (England),783
+Moths,South East (England),791
+Moths,East of England,750
+Moths,London,581
+Moths,Northern Ireland,0
