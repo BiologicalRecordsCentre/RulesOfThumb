@@ -579,7 +579,7 @@ data_files <- data_files[!grepl('Moths', data_files)]
 data_files <- data_files[!grepl('VascPlants', data_files)]
 
 dataPrep <- function(data_file){
-  cat('Starting', basename(data_file))
+  cat('Starting', basename(data_file),'\n')
   
   load(data_file)
   
@@ -591,14 +591,15 @@ dataPrep <- function(data_file){
   formatted_data <- formatOccData(taxa = taxa_data$CONCEPT,
                                   site = taxa_data$TO_GRIDREF,
                                   time_period = taxa_data$TO_STARTDATE)
-  return(formatted_data)
+  return(list(formatted_data,unique(taxa_data$CONCEPT)))
 }
 
 for(data_file in data_files){
-  formatted_data <- dataPrep(data_file)
+  rtn_list <- dataPrep(data_file)
+  formatted_data <- rtn_list[[1]]
+  spp <- rtn_list[[2]]
   
-  spp <- unique(taxa_data$CONCEPT)
-    # one group has a species called '', best to remove this (single) record
+  # one group has a species called '', best to remove this (single) record
   spp <- spp[spp != '']
   
   cat('\n', length(spp), 'species\n')
@@ -1437,7 +1438,7 @@ Before estimating how many species we can model, the data for the moth and butte
 ```{r butterflymoth, eval=FALSE, echo = FALSE}
 # Location of the jasmin butterfly and moth data
 jasmin <- file.path('W:/PYWELL_SHARED/Pywell Projects/BRC/Mark Logie/TSDA/Jasmin_data')
-data_files <- list.files(jasmin,full.names = TRUE)
+data_files_butmoth <- list.files(jasmin,full.names = TRUE)
 
 # Function to extract just the P90 and prop_abs metrics
 simpleDataMetrics <- function(sp,tFDall,num_rec,Taxa,habitat=NA,region=NA){
@@ -1457,7 +1458,7 @@ simpleDataMetrics <- function(sp,tFDall,num_rec,Taxa,habitat=NA,region=NA){
              Taxa_Root = Taxa)
 }
 
-for(data_file in data_files){
+for(data_file in data_files_butmoth){
   cat('Starting', basename(data_file))
   load(data_file)
 
@@ -1537,8 +1538,11 @@ RM <- RM[RM$Taxa==as.character(RM$Taxa_Root),]
 #  aspirational = is the cutoff the aspirational target (10:1 good:bad)?  If this is
 #    false, the default 1:1 decision tree is used
 #  long_table = is the long table for plotting required?
+#  absences = do we want the species which are absent to be separated from those with no
+#    data?
 num_spec <- function(df, habitat=NULL, region=NULL, proportional=FALSE,
-                     long_table=TRUE, zeroes=TRUE, aspirational=FALSE){
+                     long_table=TRUE, zeroes=TRUE, aspirational=FALSE,
+                     absences=FALSE){
   taxa_num <- NULL
   if(!zeroes){
     df <- df[df$Spnvisits != 0,]
@@ -1556,34 +1560,67 @@ num_spec <- function(df, habitat=NULL, region=NULL, proportional=FALSE,
   if(!is.null(region)){
     if(grepl('UK[A-Z]', region)){
       df <- df[as.character(df$code) == region,]
+      region <- unique(as.character(df$region[as.character(df$code) == region]))
     } else {
       df <- df[as.character(df$region) == region,]
     }
   }
   taxa_count <- NULL
+  
   for(taxa in sort(unique(taxa_num$taxa))){
     if(aspirational){
       data_good <- length(df$Taxa[df$Taxa == taxa &
-                                    df$data_aspire == 'good'])
+                                    df$data_aspire == 'good'&
+                                    df$Spnvisits != 0])
       data_bad  <- length(df$Taxa[df$Taxa == taxa &
-                                    df$data_aspire == 'bad'])
+                                    df$data_aspire == 'bad' &
+                                    df$Spnvisits != 0])
     } else {
       data_good <- length(df$Taxa[df$Taxa == taxa &
-                                    df$data_good == 'good'])
+                                    df$data_good == 'good'&
+                                    df$Spnvisits != 0])
       data_bad  <- length(df$Taxa[df$Taxa == taxa &
-                                    df$data_good == 'bad'])
+                                    df$data_good == 'bad'&
+                                    df$Spnvisits != 0])
     }
+
     no_data <- length(df$Taxa[df$Taxa == taxa &
                                 df$Spnvisits == 0])
-    tmpdf <- data.frame(taxa = taxa,
-                        no_data = no_data,
-                        bad = data_bad - no_data,
-                        good = data_good)
+    
+    if(absences){
+      if(!is.null(habitat)|!is.null(region)){
+        num_spec_full <- read.csv(file = './Results/num_spec_full.csv')
+        absent <-
+          taxa_num$num_spec[taxa_num$taxa==taxa] -
+          num_spec_full$num_spec[num_spec_full$Taxa==taxa&
+                                      num_spec_full$hab==ifelse(!is.null(habitat),
+                                                                habitat,region)]
+      } else {
+        absent = 0
+      }
+      
+      no_data <- no_data - absent
+      tmpdf <- data.frame(taxa = taxa,
+                          no_data = no_data - absences,
+                          absent = absent,
+                          bad = data_bad,
+                          good = data_good)
+    } else {
+      tmpdf <- data.frame(taxa = taxa,
+                          no_data = no_data,
+                          bad = data_bad,
+                          good = data_good)
+    }
     taxa_count <- rbind(taxa_count, tmpdf)
   }
  
   taxa_count <- merge(taxa_count, taxa_num)
-  taxa_count$no_data <- taxa_count$num_spec - taxa_count$bad - taxa_count$good
+  if(absences){
+    taxa_count$no_data <-
+      taxa_count$num_spec - taxa_count$bad - taxa_count$good - taxa_count$absent
+  } else {
+    taxa_count$no_data <- taxa_count$num_spec - taxa_count$bad - taxa_count$good
+  }
 
   # Convert data table for turning into graphs
   taxa_melt <- melt(taxa_count, id=c('num_spec','taxa'))
@@ -1591,7 +1628,13 @@ num_spec <- function(df, habitat=NULL, region=NULL, proportional=FALSE,
   taxa_prop$bad <- taxa_prop$bad/taxa_prop$num_spec
   taxa_prop$good <- taxa_prop$good/taxa_prop$num_spec
   taxa_prop$no_data <- taxa_prop$no_data/taxa_prop$num_spec
-  taxa_prop$no_data[taxa_prop$num_spec==0] <- 1
+  if(absences){
+    taxa_prop$absent <- taxa_prop$absent/taxa_prop$num_spec
+    taxa_prop$no_data[taxa_prop$num_spec==0] <- 0
+    taxa_prop$absent[taxa_prop$num_spec==0] <- 1
+  } else {
+    taxa_prop$no_data[taxa_prop$num_spec==0] <- 1
+  }
   taxa_prop$bad[taxa_prop$num_spec==0] <- 0
   taxa_prop$good[taxa_prop$num_spec==0] <- 0
   taxa_prop_melt <- melt(taxa_prop, id=c('num_spec','taxa'))
@@ -1599,21 +1642,30 @@ num_spec <- function(df, habitat=NULL, region=NULL, proportional=FALSE,
     taxa_melt <- taxa_prop_melt
   }
   if(long_table){
-    return(taxa_melt)
+    returning <- taxa_melt
   } else {
-    return(taxa_count)
+    returning <- taxa_count
   }
+  if(length(levels(returning$variable))==4){
+    returning$variable <- returning$variable %>% as.character() %>%
+      factor(levels = c('absent','no_data','bad','good'))
+  }
+  returning
 }
 
 # Function to plot data extracted from data frame from num_spec function
 #  df = a data frame from num_spec
 #  prefix = a prefix to the title to describe the area or habitat of interest
 stack_taxa <- function(df,prefix=NULL){
-  if('no_data' %in% as.character(unique(df$variable))){
-    colours = c('#CCCCCC','red', '#9999FF')
+  colours = c('white','#BBBBBB','red', '#9999FF')
+  if(length(unique(df$variable))==3){
+    colours <- colours[c(2,3,4)]
+  } else if(length(unique(df$variable))==2){
+    colours <- colours[c(3,4)]
   } else {
-    colours = c('red', '#9999FF')
+    
   }
+
   if(max(df$value)<=1){
     ylabel <- 'Proportion of Species'
   } else {
@@ -1702,10 +1754,11 @@ quants <-
 # Now calculate the metrics for each habitat
 hab_names <- colnames(UK_land[,3:ncol(UK_land)])
 for(data_file in data_files){
-  formatted_data <- dataPrep(data_file)
+  rtn_list <- dataPrep(data_file)
+  formatted_data <- rtn_list[[1]]
+  spp <- rtn_list[[2]]
   
-  spp <- unique(taxa_data$CONCEPT)
-    # one group has a species called '', best to remove this (single) record
+  # one group has a species called '', best to remove this (single) record
   spp <- spp[spp != '']
   
   # Create combined dataframe
@@ -1743,7 +1796,6 @@ for(data_file in data_files){
                                                paste0(hab_names,'_hab'))]
       for(hab in hab_names){
         # Extract the metrics for each habitat
-        function(sp, species_obs, basen, suffix = NULL, years = NULL)
         speciesMetric <- dataMetrics(hab = hab,
                                      sp = sp,
                                      basen = basename(data_file),
@@ -1781,7 +1833,147 @@ for(i in file_list){
 write.csv(x = td, file.path('./Habitat/HabMetrics/ALL_habMetrics.csv'))
 ```
 
+```{r findabsentspecies, echo = FALSE, eval = FALSE}
+# Now create a list of all species which are absent from each habitat, without applying
+# the >2 visits rule
+get_num_spec_taxa <- function(data_file,hab_names,quants){
+  rtn_list <- dataPrep(data_file)
+  formatted_data <- rtn_list[[1]]
+  spp <- rtn_list[[2]]
+  taxa <- regmatches(basename(data_file),
+                     regexpr('[A-z]+(?=_)',
+                             basename(data_file),
+                             perl=TRUE))
+  
+  # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  
+  # Create combined dataframe
+  species_obs <-
+    formatted_data$occDetdata %>% left_join(formatted_data$spp_vis,by="visit")
+  species_obs$site <- as.character(species_obs$site)
+  # Combine with habitat data
+  species_obs <- species_obs %>% left_join(UK_land_GR,by="site")
+  # Remove NA's
+  species_obs <- species_obs[!is.na(species_obs$CWL),]
+  
+  spp_ch <- as.character(spp)
+
+  # At the group level, determine records with above average habitat coverage
+  for(hab in hab_names){
+    # Find visits with above median coverage for this habitat
+    above_av <- species_obs[,colnames(species_obs) == hab]>=
+      quants[rownames(quants) == '50%',colnames(quants) == hab]
+    species_obs[,paste0(hab,'_hab')] <- above_av
+  }
+
+  count_num_spec <- function(hab){
+    if(hab !='UK'){
+      hab_obs <- species_obs[species_obs[,paste0(hab,'_hab')],]
+    } else {
+      hab_obs <- species_obs
+    }
+    # Create a sumpresent species
+    (spp_ch %>% lapply(function(x) if(sum(hab_obs[,x])>0){1})) %>% unlist %>% sum()
+  }
+  # Create a dataframe of counts of number of species in each habitat
+  data.frame(Taxa = taxa,
+             hab = c(hab_names,'UK'),
+             num_spec = c(hab_names,'UK') %>% lapply(count_num_spec) %>% unlist())
+  
+}
+# Create a dataframe of counts of number of species in each habitat for each group
+num_spec_list <- data_files %>%
+                   lapply(get_num_spec_taxa,
+                          hab_names,
+                          quants)
+num_spec_df <- rbind %>% do.call(num_spec_list)
+# Write the species count to file
+num_spec_df %>% write.csv(file = 'num_spec_hab.csv')
+```
+
 The metrics for butterflies and moths also needed to be calculated, in a separate function.  These are formatted differently so only the basic metrics were extracted, to save computational power.
+
+```{r findabsentspeciesbutterfly, echo = FALSE, eval = FALSE}
+# Now create a list of all species which are absent from each habitat, without applying
+# the >2 visits rule
+get_num_spec_taxa_but <- function(data_file,hab_names,quants){
+  cat('Starting', basename(data_file))
+  load(data_file)
+
+  spp <- unique(taxa_data$CONCEPT)
+  # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  
+  # We can get rid of species:site duplicates, as we are only, here, trying to work out
+  # which species have been observed at least once in each habitat
+  taxa_data_tmp <- unique(taxa_data[,c('CONCEPT','SQ_1KM')])
+  taxa_data <-
+    cbind(taxa_data_tmp,
+          data.frame(TO_STARTDATE =
+                       taxa_data$TO_STARTDATE[rep(taxa_data$TO_STARTDATE[1],
+                                                  nrow(taxa_data_tmp))]))
+  if('SQ_1KM' %in% colnames(taxa_data)){
+    names(taxa_data)[names(taxa_data) == 'SQ_1KM'] <- 'TO_GRIDREF'
+  }
+  
+  names(taxa_data)[names(taxa_data)=='TO_GRIDREF'] <- 'site'
+  taxa_data <- taxa_data %>% left_join(UK_land_GR,by='site')
+  
+  taxa <- substr(basename(data_file),1,regexpr('_',basename(data_file))[1]-1)
+
+  cat('\n', length(spp), 'species\n')
+
+  hab_lookup <- data.frame(site = UK_land_GR$site,
+                           stringsAsFactors = FALSE)
+  
+  UK_land_GR[UK_land_GR$site %in% unique(taxa_data$site[is.na(taxa_data$CWL)]),]
+  # Remove NA's
+  species_obs <- taxa_data[!is.na(taxa_data$CWL),]
+  
+  length(unique(species_obs$CONCEPT))
+  # At the group level, determine records with above average habitat coverage
+  for(hab in hab_names){
+    # Find visits with above median coverage for this habitat
+    above_av <- species_obs[,colnames(species_obs) == hab]>=
+      quants[rownames(quants) == '50%',colnames(quants) == hab]
+    species_obs[,paste0(hab,'_hab')] <- above_av
+  }
+  
+  count_num_spec <- function(hab){
+    if(hab !='UK'){
+      hab_obs <- species_obs[species_obs[,paste0(hab,'_hab')],]
+    } else {
+      hab_obs <- species_obs
+    }
+    cat(' Habitat:',hab,'\n')
+
+    # Create a sumpresent species
+    spp %>%
+      lapply(function(x) if((hab_obs %>% filter(CONCEPT == x) %>% nrow())>0){1}) %>%
+      unlist() %>%
+      sum()
+  }
+  # Create a dataframe of counts of number of species in each habitat
+  
+  data.frame(Taxa = taxa,
+             hab = c(hab_names,'UK'),
+             num_spec = c(hab_names,'UK') %>% lapply(count_num_spec) %>% unlist())
+}
+# Create a dataframe of counts of number of species in each habitat for each group
+num_spec_list_but <- list.files(jasmin,full.names = TRUE) %>%
+                       lapply(get_num_spec_taxa_but,
+                              hab_names,
+                              quants)
+num_spec_df_but <- rbind %>% do.call(num_spec_list_but)
+num_spec_df <- read.csv(file = 'num_spec_hab.csv')
+num_spec_full <- rbind(num_spec_df[,2:4],num_spec_df_but)
+levels(num_spec_full$Taxa) <- c(levels(num_spec_full$Taxa),'E&D')
+num_spec_full$Taxa[num_spec_full$Taxa == 'D'] <- 'E&D'
+# Write the species count to file
+num_spec_full %>% write.csv(file = 'num_spec_full.csv',row.names = FALSE)
+
+```
 
 ```{r butterflyhab,eval=FALSE, echo=FALSE}
 for(data_file in list.files(jasmin,full.names = TRUE)){
@@ -1878,6 +2070,44 @@ RM_hab <-
 RM_hab <- calc_bad(RM_hab)
 ```
 
+```{r calchabwithabsences, echo=FALSE, eval=FALSE}
+# Calculating habitat table for pie chart facet plot
+create_hab_table <- function(habitat,RM_hab,absences=TRUE){
+  tabltmp <- num_spec(df = RM_hab,habitat,absences=TRUE)
+  hab <- rep(habitat,nrow(tabltmp))
+  cbind(tabltmp,hab)
+}
+tmp_list <- lapply(unique(RM_hab$habitat),
+                   create_hab_table,
+                   RM_hab,
+                   absences=TRUE)
+hab_table_full <- do.call(rbind,tmp_list)
+RM <- calc_bad(RM)
+GBtmp <- num_spec(RM)
+hab <- rep('GB',nrow(GBtmp))
+hab_table_GB <- cbind(GBtmp,hab)
+hab_table_full <- rbind(hab_table_full,hab_table_GB)
+
+for(rownum in as.numeric(row.names(hab_table_full[hab_table_full$value<0,]))){
+  tax <- hab_table_full$taxa[rownum]
+  hab <- hab_table_full$hab[rownum]
+  hab_table_full$value[rownum] <- 0
+  numspec <- hab_table_full$num_spec[rownum]
+  good <- hab_table_full$value[hab_table_full$variable=='good' &
+                                 hab_table_full$taxa == tax &
+                                 hab_table_full$hab == hab]
+  bad <- hab_table_full$value[hab_table_full$variable=='bad' &
+                                 hab_table_full$taxa == tax &
+                                 hab_table_full$hab == hab]
+  hab_table_full$value[hab_table_full$variable=='absent' &
+                         hab_table_full$taxa == tax &
+                         hab_table_full$hab == hab] <- numspec - (good + bad)
+  
+}
+
+write.csv(hab_table_full, 'hab_table_full.csv', row.names = FALSE)
+```
+
 Below are two sample graphs for two habitats:
 
 * Proportion of species which can be modelled using only Broad-Leaf Woodland data (Figure \@ref(fig:plotBLW))
@@ -1885,13 +2115,14 @@ Below are two sample graphs for two habitats:
 
 ```{r plotBLW,fig.cap='Proportion of species which can be modelled in broad-leaf woodland'}
 # Plot up a sample graph for broad leaf woodland
-num_spec(RM_hab,habitat='BLW',proportional=TRUE) %>%
+num_spec(RM_hab,habitat='BLW',proportional=TRUE,absences=TRUE) %>%
   stack_taxa(prefix='B-L Woodland')
 ```
 
 ```{r plotcoastal,fig.cap='Proportion of species which can be modelled in coastal habitats'}
 # And for coastal
-num_spec(RM_hab,habitat='C',proportional=TRUE) %>% stack_taxa(prefix='Coastal')
+num_spec(RM_hab,habitat='C',proportional=TRUE,absences=TRUE) %>%
+  stack_taxa(prefix='Coastal')
 ```
 
 
@@ -1901,13 +2132,15 @@ num_spec(RM_hab,habitat='C',proportional=TRUE) %>% stack_taxa(prefix='Coastal')
 
 The data can also be split by region.  Splitting by region is simpler than for habitat as all squares in the UK exist within a region which can be obtained from the NUTS lookup table.  The data is then subset by region and the metrics extracted for each of these regions.  The available regions are shown in Table \@ref(tab:regiontable).
 
-```{r calcmetricsregion,eval=FALSE, echo=FALSE}
-regions <- read.csv(file.path('./Region/NUTS1_1km_dupsorted.csv'))
+```{r calcmetricsregion, eval=FALSE, echo=FALSE}
+# Calculate metrics for the regions
+regions <- read.csv(file.path('../Region/NUTS1_1km_dupsorted.csv'))
 regions <- regions[,c(2,4)]
 
 for(data_file in data_files){
-  formatted_data <- dataPrep(data_file)
-  spp <- unique(taxa_data$CONCEPT)
+  rtn_list <- dataPrep(data_file)
+  formatted_data <- rtn_list[[1]]
+  spp <- rtn_list[[2]]
   spp <- spp[spp != '']
   
   # Create combined dataframe
@@ -2043,6 +2276,72 @@ td <- rbind(regRM,master)
 write.csv(x = td, file.path('./Region/RegMetrics/ALL_combinedRegMetrics.csv'))
 ```
 
+```{r calcmetricsregionpresent,eval=FALSE, echo=FALSE}
+# Calculate number of species present in each region
+regions <- read.csv(file.path('./Region/NUTS1_1km_dupsorted.csv'))
+regions <- regions[,c(2,4)]
+
+jasmin <- file.path('W:/PYWELL_SHARED/Pywell Projects/BRC/Mark Logie/TSDA/Jasmin_data')
+data_files_path <- file.path('W:/PYWELL_SHARED/Pywell Projects/BRC/Charlie',
+                             '1.c. New Model Rerun/1. Data/Cleaned Datasets')
+data_files <- list.files(data_files_path,
+                         pattern = '.rdata$',
+                         full.names = TRUE)
+data_files <- data_files[!grepl('Moths', data_files)]
+data_files <- data_files[!grepl('VascPlants', data_files)]
+data_files <- c(data_files,
+                list.files(jasmin,full.names = TRUE))
+
+count_num_reg <- function(data_file){
+  cat('Starting', basename(data_file),'\n')
+  load(data_file)
+
+  spp <- unique(taxa_data$CONCEPT)
+  # one group has a species called '', best to remove this (single) record
+  spp <- spp[spp != '']
+  if('SQ_1KM' %in% colnames(taxa_data)){
+    names(taxa_data)[names(taxa_data) == 'SQ_1KM'] <- 'TO_GRIDREF'
+  }
+  
+  # We can get rid of species:site duplicates, as we are only, here, trying to work out
+  # which species have been observed at least once in each habitat
+  taxa_data_tmp <- unique(taxa_data[,c('CONCEPT','TO_GRIDREF')])
+  taxa_data <-
+    cbind(taxa_data_tmp,
+          data.frame(TO_STARTDATE =
+                       taxa_data$TO_STARTDATE[rep(taxa_data$TO_STARTDATE[1],
+                                                  nrow(taxa_data_tmp))]))
+  names(taxa_data)[names(taxa_data)=='TO_GRIDREF'] <- 'site'
+  species_obs <- merge(x = taxa_data, y = regions, by.x= 'site', by.y = 'km_sq')
+
+  region_list <-
+    regions %>% select(nutsname) %>% .[["nutsname"]] %>% unique() %>% as.character()
+
+  taxa <- regmatches(basename(data_file),
+                     regexpr('[A-z]+(?=_)',basename(data_file),perl=TRUE))
+  length(unique(species_obs$CONCEPT))
+  df <- data.frame(Taxa = rep(taxa, length(region_list)),
+                  reg = as.character(region_list),
+                  num_spec = region_list %>%
+                    lapply(function(x)
+                      species_obs %>%
+                        filter(nutsname == x) %>%
+                        select(CONCEPT) %>% .[["CONCEPT"]] %>%
+                        unique() %>% length()) %>% unlist())
+  df <- rbind(df,
+              data.frame(Taxa = taxa,
+                         reg = 'UK',
+                         num_spec = species_obs$CONCEPT %>% unique() %>% length()))
+  df
+}
+
+num_spec_reg <- data_files %>% lapply(count_num_reg) %>% do.call(rbind, .)
+write.csv(num_spec_reg,'num_spec_reg.csv',row.names = FALSE)
+names(num_spec_reg)[names(num_spec_reg)=='reg'] <- 'hab'
+nsf <- read.csv(file = 'num_spec_hab.csv')
+write.csv(x = rbind(num_spec_reg,nsf), file = 'num_spec_full.csv')
+```
+
 ```{r regionmetrics}
 # Read in the regional raw metrics
 RM_reg <-
@@ -2058,6 +2357,26 @@ RM_reg <- merge(RM_reg,region_lookup)
 RM_reg <- calc_bad(RM_reg)
 ```
 
+```{r calcregwithabsences, echo=FALSE, eval=FALSE}
+# Calculating habitat table for pie chart facet plot
+create_reg_table <- function(region,RM_reg,absences=TRUE){
+  tabltmp <- num_spec(df = RM_reg,region=region,absences=absences)
+  reg <- rep(region,nrow(tabltmp))
+  cbind(tabltmp,reg)
+}
+
+tmp_list <- lapply(unique(RM_reg$region),
+                   create_reg_table,
+                   RM_reg,
+                   absences=TRUE)
+reg_table_full <- do.call(rbind,tmp_list)
+GBtmp <- num_spec(RM)
+reg <- rep('GB',nrow(GBtmp))
+reg_table_GB <- cbind(GBtmp,reg)
+reg_table_full <- rbind(reg_table_full,reg_table_GB)
+write.csv(x = reg_table_full,'reg_table_full.csv',row.names=FALSE)
+```
+
 ```{r regiontable, echo=FALSE}
 region_lookup %>% kable(caption = 'List of regions')
 ```
@@ -2070,12 +2389,13 @@ Below are two sample graphs for two regions:
 
 ```{r plotscotland,fig.cap='Proportion of species which can be modelled in Scotland'}
 # Plot up a sample graph for Scotland
-num_spec(RM_reg,region='Scotland',proportional=T) %>% stack_taxa(prefix='Scotland')
+num_spec(RM_reg,region='Scotland',proportional=T,absences=T) %>%
+  stack_taxa(prefix='Scotland')
 ```
 
 ```{r plotwales,fig.cap='Proportion of species which can be modelled in Wales'}
 # And for Wales
-num_spec(RM_reg,region='UKL',proportional=TRUE) %>% stack_taxa(prefix='Wales')
+num_spec(RM_reg,region='UKL',proportional=T,absences=T) %>% stack_taxa(prefix='Wales')
 ```
 
 
