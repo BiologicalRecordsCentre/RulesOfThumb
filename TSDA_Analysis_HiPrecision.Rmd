@@ -1936,50 +1936,7 @@ get_num_spec_taxa_but <- function(data_file,hab_names,quants){
     species_obs[,paste0(hab,'_hab')] <- above_av
   }
   
-  ```{r findabsentspeciesbutterfly, echo = FALSE, eval = FALSE}
-# Now create a list of all species which are absent from each habitat, without applying
-# the >2 visits rule
-get_num_spec_taxa_but <- function(data_file,hab_names,quants){
-  cat('Starting', basename(data_file))
-  load(data_file)
-  spp <- unique(taxa_data$CONCEPT)
-  # one group has a species called '', best to remove this (single) record
-  spp <- spp[spp != '']
-  
-  # We can get rid of species:site duplicates, as we are only, here, trying to work out
-  # which species have been observed at least once in each habitat
-  taxa_data_tmp <- unique(taxa_data[,c('CONCEPT','SQ_1KM')])
-  taxa_data <-
-    cbind(taxa_data_tmp,
-          data.frame(TO_STARTDATE =
-                       taxa_data$TO_STARTDATE[rep(taxa_data$TO_STARTDATE[1],
-                                                  nrow(taxa_data_tmp))]))
-  if('SQ_1KM' %in% colnames(taxa_data)){
-    names(taxa_data)[names(taxa_data) == 'SQ_1KM'] <- 'TO_GRIDREF'
-  }
-  
-  names(taxa_data)[names(taxa_data)=='TO_GRIDREF'] <- 'site'
-  taxa_data <- taxa_data %>% left_join(UK_land_GR,by='site')
-  
-  taxa <- substr(basename(data_file),1,regexpr('_',basename(data_file))[1]-1)
-  cat('\n', length(spp), 'species\n')
-  hab_lookup <- data.frame(site = UK_land_GR$site,
-                           stringsAsFactors = FALSE)
-  
-  UK_land_GR[UK_land_GR$site %in% unique(taxa_data$site[is.na(taxa_data$CWL)]),]
-  # Remove NA's
-  species_obs <- taxa_data[!is.na(taxa_data$CWL),]
-  
-  length(unique(species_obs$CONCEPT))
-  # At the group level, determine records with above average habitat coverage
-  for(hab in hab_names){
-    # Find visits with above median coverage for this habitat
-    above_av <- species_obs[,colnames(species_obs) == hab]>=
-      quants[rownames(quants) == '50%',colnames(quants) == hab]
-    species_obs[,paste0(hab,'_hab')] <- above_av
-  }
   # Create a dataframe of counts of number of species in each habitat
-  
   data.frame(Taxa = taxa,
              hab = c(hab_names,'UK'),
              num_spec = c(hab_names,'UK') %>% lapply(count_num_spec) %>% unlist())
