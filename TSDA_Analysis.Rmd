@@ -815,13 +815,21 @@ fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate,
                   method = 'class',
                   data = fsdf)
 
+fit_fsdf.ConfMat <- table ( data.frame( predicted = predict(fit_fsdf, type = "vector"), score = fit_fsdf$y) )
+accuracy.fit_fsdf <- sum(diag(fit_fsdf.ConfMat))/sum(fit_fsdf.ConfMat)
+
+
 rpart.plot(fit_fsdf, extra = 108, type = 3, clip.right.labs = FALSE)
 ```
 
 ```{r decisionsconvergence}
-fit_fsdf <- rpart(good ~ mean_year_precision + precision_growth_rate + PropYrConverged,
+fit_fsdf2 <- rpart(good ~ mean_year_precision + precision_growth_rate + PropYrConverged,
                   method = 'class',
                   data = fsdf)
+
+fit_fsdf2.ConfMat <- table ( data.frame( predicted = predict(fit_fsdf2, type = "vector"), score = fit_fsdf2$y) )
+accuracy.fit_fsdf2 <- sum(diag(fit_fsdf2.ConfMat))/sum(fit_fsdf2.ConfMat)
+
 ```
 
 
@@ -860,9 +868,9 @@ ggplot() +
 
 The success of the decision tree for classifying bad models is:
 
-* Using precision only:  92% for bad models, 85% for good models (Figure \@ref(fig:decisionsprecision))
+* Using precision only:  accuracy is `r round(accuracy.fit_fsdf,3)` (Figure \@ref(fig:decisionsprecision))
 
-* Using precision and convergences: 95% for bad models, 95% for good models (Figure \@ref(fig:plottreeconvergence))
+* Using precision and convergences: accuracy is `r round(accuracy.fit_fsdf2,3)` (Figure \@ref(fig:plottreeconvergence))
 
 Using both metrics is clearly better for splitting good and bad models, therefore this split will be used.  The split is shown in Figure \@ref(fig:plotconsultationdecisiontree):
 
@@ -2410,3 +2418,48 @@ With this decision tree (repeated below, Figure \@ref(fig:plotdecisiontreefinal)
 ```{r plotdecisiontreefinal, echo=FALSE, fig.cap = 'Best fit decision tree for deciding if a dataset is likely to produce an acceptable model'}
 plot(ev)
 ```
+
+\pagebreak
+
+# Print-ready plots
+
+```{r fig2c,echo=FALSE,fig.cap="Histogram of the mean year precision for all models"}
+ggplot(trendsData, aes(x = mean_year_precision)) + 
+  geom_histogram(bins=40, fill = "grey50") +
+  scale_x_log10(labels=scales::comma) + 
+  theme_light() +
+  geom_vline(xintercept = c(60,149), size = 1, linetype = 2) +
+  geom_vline(xintercept = 2126, size = 1) +
+  scale_y_continuous(expand = c(0,1)) +
+  annotate("text", label = c("poor","acceptable","high"), x = c(10,200,1e4), y = 220, hjust = 0) +
+  ylab("frequency")
+  
+```
+
+
+```{r fig2a,echo=FALSE,fig.cap="Graph showing results of consulation with model experts, including the results of the decision tree.  Light grey points in the background show all models which were not part of the consultation"}
+ggplot() +
+  geom_point(data=trendsData[trendsData$mean_year_precision>6&
+                               trendsData$mean_year_precision<1000000,],
+             aes(x=PropYrConverged,
+                 y=mean_year_precision),
+             color='#DFDFDF',
+             size=.5) +
+  geom_point(data=fsdf,
+             aes(x=PropYrConverged,
+                 y=mean_year_precision,
+                 color=as.factor(score)),
+                  size = 2) +
+  scale_x_continuous(limits=c(0,1)) +
+  scale_y_log10(limits=c(6,1000000),labels = scales::comma) +
+  theme_light() +
+  scale_color_manual(values=c('#ca0020','#f4a582',"#92c5de", "#0571b0"),
+                     name='Model score',
+                     guide = guide_legend(reverse = TRUE)) +
+  xlab("Proportion of Years which Converged") + ylab("Mean year precision") +
+  geom_segment(aes(x=0.34, y = 149, xend = 0, yend = 149), color = 'black') +
+  geom_segment(aes(x=0.34, y = 60, xend = 1, yend = 60), color = 'black') +
+  geom_segment(aes(x=0.34, y = 60, xend = 0.34, yend = 149), color = 'black') +
+  geom_segment(aes(x=0, y = 87, xend = 1, yend = 87), color = 'black', linetype = 2) 
+```
+
