@@ -1111,6 +1111,14 @@ ev <- evtree(model_good_hi ~ P90 + prop_abs,
              weights = ifelse(trendsData$model_good_hi == 'bad',
                               goodweight, badweight),
              control = evtree.control(maxdepth = 2))
+
+ev2 <- evtree(model_good_hi ~ median + P90 + visits_median + visits_P90 +
+               prop_repeats_grp + prop_abs + prop_list_one,
+             data = trendsData,
+             weights = ifelse(trendsData$model_good_hi == 'bad',
+                              goodweight, badweight),
+             control = evtree.control(maxdepth = 2))
+
 ```
 
 ```{r loadtree,fig.cap='Decision tree for rules of thumb'}
@@ -1118,6 +1126,10 @@ load(file = 'ev_trees_hi.Rdata')
 ev <- ev_trees$ev
 ev
 plot(ev)
+```
+
+``` {r full.evtree, fig.cap = "Decision tree for rules of thumb, based on all metrics"}
+plot(ev2)
 ```
 
 The decision tree is shown in Figure \@ref(fig:loadtree).  The first node in this decision tree is `prop_abs` >= 0.969.  To meet this requirement, at least 96.9% of the data for the taxonomic group needs to come from visits where species other than the species of interest were observed.  This is equivalent to 31 additional visits for every 1 visit in which species of interest was observed.
@@ -1141,15 +1153,28 @@ TP <- sum(predict(ev)==trendsData$model_good_hi & predict(ev)=='good')
 FP <- sum(predict(ev)!=trendsData$model_good_hi & predict(ev)=='good')
 TN <- sum(predict(ev)==trendsData$model_good_hi & predict(ev)=='bad')
 FN <- sum(predict(ev)!=trendsData$model_good_hi & predict(ev)=='bad')
+
+TP2 <- sum(predict(ev2)==trendsData$model_good_hi & predict(ev2)=='good')
+FP2 <- sum(predict(ev2)!=trendsData$model_good_hi & predict(ev2)=='good')
+TN2 <- sum(predict(ev2)==trendsData$model_good_hi & predict(ev2)=='bad')
+FN2 <- sum(predict(ev2)!=trendsData$model_good_hi & predict(ev2)=='bad')
+
 ```
 
-This decision tree has a positive precision (TP/(TP+FP)) of `r round(TP*100/(TP+FP),1)`%, meaning  `r round(TP*100/(TP+FP),1)`% of the time, if the decision tree predicts the data will be able to produce a good model, it will.
+This decision tree has a positive precision (TP/(TP+FP)) of `r round(TP*100/(TP+FP),1)`%, meaning  `r round(TP*100/(TP+FP),1)`% of the time, if the decision tree predicts the data will be able to produce a good model, it will. 
 
 This decision tree has a negative precision (TN/(TN+FN)) of `r round(TN*100/(TN+FN),1)`%, meaning  `r round(TN*100/(TN+FN),1)`% of the time, if the decision tree predicts the data will *not* be able to produce a good model, it will indeed not produce a good model.
 
 The recall/sensitivity/true positive rate (TP/(TP+FN)) is `r round(TP*100/(TP+FN),1)`%, meaning `r round(TP*100/(TP+FN),1)`% of all datasets which would produce a good model are classified as good datasets.
 
 The specificity/true negative rate (TN/(TN+FP)) is `r round(TN*100/(TN+FP),1)`%, meaning `r round(TN*100/(TN+FP),1)`% of all datasets which would *not* produce a good model are classified as bad.
+
+The overall accuracy is `r round((TP + TN)*100 / (length(predict(ev))),1)`.
+
+For the tree from all metrics:
+Sensitivity is `r round(TN2 * 100/(TN2 + FN2),1)`%
+Specificity is `r round(TN2 * 100/(TN2 + FP2),1)`%
+Accuracy is `r round((TP2 + TN2) / (length(predict(ev2))),2)`
 
 A graphic way of considering the decision tree is in Figure \@ref(fig:plotdecisiontreebybad).  This graph has the decision tree cutoffs shown in a black line, where any data below the line are predicted as not producing a good model and any above the line are predicted as having enough data.  Points coloured blue did in fact produce a good model, while those below the line did not:
 
