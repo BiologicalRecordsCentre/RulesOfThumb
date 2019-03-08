@@ -709,6 +709,12 @@ sum(trendsData$P90==0)
 trendsData <- trendsData[trendsData$P90>0,]
 ```
 
+## Summary statistics
+
+There were `r length(unique(trendsDataData$Taxa_Root))` projects in the dataset.
+There was an average of `r  median(table(trendsData$Taxa))` species per project, with a range of `r  min(table(trendsData$Taxa))` to `r  max(table(trendsData$Taxa))`
+
+
 ## Consultation on model outputs
 
 Next, define which of the species have 'good' models and which are 'bad'.
@@ -938,8 +944,8 @@ pairs.panels(td_sub, hist.col = 'blue',smooth = TRUE)
 ```
 
 ```{r pairspanelswithlogs,fig.cap="Pairs plot for all variables used to construct the classification tree, plus the Spnvisits variable, defined as the total number of records for each species of interest.  Spnvisits, P90 and visits_P90 have been log transformed for this version.",echo=FALSE}
-td_sub2 <- log10(trendsData[,c('Spnvisits','P90','visits_P90')]+1)
-td_sub2 <- cbind (td_sub2, trendsData[,c('prop_repeats_grp','prop_abs')] )
+td_sub2 <- log10(trendsData[,c('median','P90','visits_median','visits_P90')]+1)
+td_sub2 <- cbind (td_sub2, trendsData[,c('prop_repeats_grp','prop_list_one','prop_abs','prop_abs_list')] )
 
 pairs.panels(td_sub2, hist.col = 'blue',smooth = TRUE)
 ```
@@ -1048,14 +1054,20 @@ Overall, we found that `r round( mean(taxa_melt$value[taxa_melt$variable == "Rem
 Using the decision tree above for splitting output models into good and bad, the model outputs can be classified as good or bad.  For some of the species we do not have the proportion of years converged.  For these we use the simple decision tree: mean_year_precision >= 87.
 
 ```{r splitgoodbad}
-trendsData$model_good <- rep('bad',nrow(trendsData))
+trendsData$model_good <- rep('poor',nrow(trendsData))
 trendsData$model_good[(trendsData$PropYrConverged < 0.3437 &
                   trendsData$mean_year_precision >= 149.3) |
                   (trendsData$PropYrConverged >= 0.3437 &
                    trendsData$mean_year_precision >= 60.02) |
                   (is.na(trendsData$PropYrConverged) &
-                   trendsData$mean_year_precision >= 87)] <- 'good'
-trendsData$model_good <- factor(trendsData$model_good, levels = c('good','bad'))
+                   trendsData$mean_year_precision >= 87)] <- 'acceptable'
+trendsData$model_good <- factor(trendsData$model_good, levels = c('poor','acceptable'), ordered = TRUE)
+
+# add a version for all 3 categories - see the 'High' Rmarkdown for full info
+trendsData$model_good2 <- trendsData$model_good
+trendsData$model_good2 <- factor(trendsData$model_good2, levels = c('poor','acceptable', 'high'), ordered = TRUE)
+trendsData$model_good2[trendsData$mean_year_precision >= 2126] <- 'high'
+
 ```
 
 ## Effect of rarity of species on precision
@@ -2462,4 +2474,24 @@ ggplot() +
   geom_segment(aes(x=0.34, y = 60, xend = 0.34, yend = 149), color = 'black') +
   geom_segment(aes(x=0, y = 87, xend = 1, yend = 87), color = 'black', linetype = 2) 
 ```
+
+
+```{r fig3}
+
+ggplot(data = trendsData %>%
+         filter(mean_year_precision>5 & mean_year_precision<1e6 & mean_means>0.001)) +
+  geom_point(aes(x = mean_year_precision, y = mean_means, color = model_good2),
+             alpha = 0.1) +
+  scale_color_manual(values = c('#d95f02','#7570b3','#1b9e77')) +
+  ylab('Mean yearly occupancy') + xlab('Model yearly precision') +
+  scale_y_log10(breaks = c(1,0.2,0.05,0.01)) +
+  scale_x_log10(labels = comma) +
+  geom_hline(yintercept = .05, linetype = 'dashed') +
+  guides(colour = guide_legend(override.aes = list(alpha = 1))) +
+  labs(color = 'Model') +
+  theme_light()
+
+```
+
+
 
